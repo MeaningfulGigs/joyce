@@ -8,7 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 const { Configuration, OpenAIApi } = require("openai");
 
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 const USER_CONTEXT =
