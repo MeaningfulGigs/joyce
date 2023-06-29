@@ -1,5 +1,26 @@
 .container {
   display: flex;
+  flex-direction: column;
+}
+
+.debug {
+  margin: 10px;
+  border: 2px solid red;
+  background-color: darkred;
+}
+
+.debugheader {
+  background-color: red;
+  color: white;
+  padding: 5px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.debuglogs {
+  padding: 10px;
+  color: white;
+  font-size: 0.75rem;
 }
 
 .main {
@@ -12,20 +33,22 @@
 }
 
 .matches {
-  padding: 2rem;
-  width: 75vw;
+  padding-top: 1rem;
   display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: center;
-  /* display: none; */
-  /* border: 1px solid red; */
+  justify-content: space-between;
+  align-self: center;
+  width: 75vw;
 }
 
 .match {
   display: flex;
   flex-direction: column;
-  /* border: 1px solid red; */
+  border-radius: 0px 0px 8px 8px;
+}
+
+.match:hover {
+  cursor: pointer;
+  box-shadow: 0px 0px 20px 2px #bfc6c6;
 }
 
 .creativematch {
@@ -292,7 +315,7 @@
 
 .cloud {
   width: 75vw;
-  height: 65vh;
+  height: 50vh;
   background: #eff6ff;
   border-radius: 0.5rem;
   border: 1px solid #bfc6c6;

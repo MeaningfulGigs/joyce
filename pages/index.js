@@ -10,6 +10,8 @@ export default function Home() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [creatives, setCreatives] = useState(null);
+  const [debug, setDebug] = useState([]);
+
   const [messages, setMessages] = useState([
     {
       message: "Hi there! Tell me about your design needs.",
@@ -59,10 +61,9 @@ export default function Home() {
     ]);
 
     const response = await getKeywords(userInput);
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { message: response.content, type: "apiMessage" },
-    ]);
+    const log = response.keywords.toString();
+    console.log(log);
+    setDebug((prevDebug) => [...prevDebug, log]);
 
     // Reset user input
     setUserInput("");
@@ -70,8 +71,7 @@ export default function Home() {
     setMessages((prevMessages) => [
       ...prevMessages,
       {
-        message:
-          "OK, I'll search our database of designers to find the best matches for you, based on what you've told me.",
+        message: "...",
         type: "apiMessage",
       },
     ]);
@@ -82,7 +82,7 @@ export default function Home() {
     const summary = await getSummary(matches);
 
     setMessages((prevMessages) => [
-      ...prevMessages,
+      ...prevMessages.slice(0, [prevMessages.length - 1]),
       { message: summary, type: "apiMessage" },
     ]);
     setLoading(false);
@@ -105,7 +105,10 @@ export default function Home() {
         <title>MG Chatbot</title>
         <meta name="description" content="LangChain documentation chatbot" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="icon"
+          href="https://uploads-ssl.webflow.com/645001ed7d5053811b578ae0/646cfaf127078f9c63cc74d4_mg-favicon.png"
+        />
       </Head>
       <div className={styles.topnav}>
         <div className={styles.navlogo}>
@@ -122,7 +125,47 @@ export default function Home() {
           <a href="/">Magic Matches GPT v0.2</a>
         </div>
       </div>
+      {!!debug.length && (
+        <div className={styles.debug}>
+          <div className={styles.debugheader}>DEBUG</div>
+          <div className={styles.debuglogs}>
+            {debug.map((log) => (
+              <p>Keywords Parsed: {log.replaceAll(",", ", ")}</p>
+            ))}
+          </div>
+        </div>
+      )}
       <div className={styles.container}>
+        <div className={styles.matches}>
+          {creatives &&
+            creatives.map((match) => {
+              return (
+                <div className={styles.match}>
+                  <div>
+                    <img
+                      src={`https://assets.meaningfulgigs.com/${match.hero.source}`}
+                      className={styles.hero}
+                    />
+                  </div>
+                  <div className={styles.creativematch}>
+                    <img
+                      src={`https://assets.meaningfulgigs.com/${match.avatar}`}
+                      className={styles.avatar}
+                    />
+                    <div className={styles.creativedata}>
+                      <h3>{match.name}</h3>
+                      <div>
+                        {match.specialties[0].replace("Design", "")}
+                        <br />
+                        {match.specialties[1] &&
+                          match.specialties[1].replace("Design", "")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
         <main className={styles.main}>
           <div className={styles.cloud}>
             <div ref={messageListRef} className={styles.messagelist}>
@@ -222,34 +265,6 @@ export default function Home() {
             </div>
           </div>
         </main>
-
-        <div className={styles.matches}>
-          {creatives &&
-            creatives.map((match) => {
-              return (
-                <div className={styles.match}>
-                  <div>
-                    <img
-                      src={`https://assets.meaningfulgigs.com/${match.hero.source}`}
-                      className={styles.hero}
-                    />
-                  </div>
-                  <div className={styles.creativematch}>
-                    <img
-                      src={`https://assets.meaningfulgigs.com/${match.avatar}`}
-                      className={styles.avatar}
-                    />
-                    <div className={styles.creativedata}>
-                      <h3>{match.name}</h3>
-                      <div>
-                        {match.specialties[0]} • {match.specialties[1]}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-        </div>
       </div>
     </>
   );
