@@ -1,9 +1,4 @@
-import {
-  GPT_MESSAGES,
-  TAXONOMY,
-  SUMMARY_CONTEXT,
-  QUESTION_CONTEXT,
-} from "../../constants";
+import { GPT_MESSAGES, TAXONOMY } from "../../constants";
 
 const { Configuration, OpenAIApi } = require("openai");
 
@@ -15,7 +10,7 @@ const openai = new OpenAIApi(configuration);
 export async function getKeywords(userInput) {
   GPT_MESSAGES.push({
     role: "user",
-    content: `${userInput}. ${QUESTION_CONTEXT}`,
+    content: userInput,
   });
   const response = await openai.createChatCompletion({
     model: "gpt-3.5-turbo-0613",
@@ -76,10 +71,6 @@ export async function getSummary(matches) {
     {
       role: "assistant",
       content: JSON.stringify(matches),
-    },
-    {
-      role: "user",
-      content: SUMMARY_CONTEXT,
     },
   ];
   GPT_MESSAGES.push(...matches_context);

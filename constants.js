@@ -39,8 +39,4 @@ const GPT_MESSAGES = [
   },
 ];
 
-const QUESTION_CONTEXT = ""; //Synthesize and analyze everything I've said to you in this conversation, then select exactly 5 Terms from 'The Taxonomy' that you would use to search for my perfect match."; // Don't include any prose or explanations in your response.  Just the Top 5 Terms.
-const SUMMARY_CONTEXT =
-  "For each JSON document, give 2-3 bullets explaining why each designer was selected for me, based on the Terms that you found for me.";
-
-export { TAXONOMY, GPT_MESSAGES, SUMMARY_CONTEXT, QUESTION_CONTEXT };
+export { TAXONOMY, GPT_MESSAGES };
