@@ -131,7 +131,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches GPT v0.4</a>
+          <a onClick={toggleDebug}>Magic Matches GPT v0.4.1</a>
         </div>
       </div>
       <div id="debug" className={styles.debug}>
