@@ -1,19 +1,25 @@
+.container {
+  display: flex;
+}
+
 .main {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
+  border: 1px solid red;
 }
 
 .matches {
-  /* border: 1px solid red; */
+  padding: 2rem;
   width: 75vw;
-  border-radius: 0.5rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
   /* display: none; */
+  border: 1px solid red;
 }
 
 .match {
@@ -25,6 +31,7 @@
   display: flex;
   align-items: center;
   margin: 10px;
+  padding: 0px 20px;
 }
 
 .creativedata {
