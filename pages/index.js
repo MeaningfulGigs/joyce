@@ -66,7 +66,6 @@ export default function Home() {
 
     // Reset user input
     setUserInput("");
-    setLoading(false);
 
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -76,6 +75,7 @@ export default function Home() {
         type: "apiMessage",
       },
     ]);
+
     const matches = await getMatches(response.keywords);
     setCreatives(matches);
 
@@ -119,7 +119,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a href="/">Magic Matches GPT</a>
+          <a href="/">Magic Matches GPT v0.2</a>
         </div>
       </div>
       <div className={styles.container}>
@@ -136,6 +136,10 @@ export default function Home() {
                       loading &&
                       index === messages.length - 1
                         ? styles.usermessagewaiting
+                        : message.type === "apiMessage" &&
+                          loading &&
+                          index === messages.length - 1
+                        ? styles.apimessagewaiting
                         : message.type === "apiMessage"
                         ? styles.apimessage
                         : styles.usermessage

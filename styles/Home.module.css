@@ -8,7 +8,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  border: 1px solid red;
+  /* border: 1px solid red; */
 }
 
 .matches {
@@ -19,7 +19,7 @@
   justify-content: space-between;
   align-items: center;
   /* display: none; */
-  border: 1px solid red;
+  /* border: 1px solid red; */
 }
 
 .match {
@@ -78,6 +78,7 @@
 .navlogo {
   font-size: 1.25rem;
   margin-left: 1rem;
+  color: #bfc6c6;
 }
 
 .navlinks {
@@ -184,6 +185,17 @@
 }
 
 .usermessagewaiting {
+  padding: 1.5rem;
+  color: #272f3b;
+  background: linear-gradient(to left, #fff, #eff6ff, #dbeafe);
+  background-size: 200% 200%;
+  background-position: -100% 0;
+  animation: loading-gradient 2s ease-in-out infinite;
+  animation-direction: alternate;
+  animation-name: loading-gradient;
+}
+
+.apimessagewaiting {
   padding: 1.5rem;
   color: #272f3b;
   background: linear-gradient(to left, #fff, #eff6ff, #dbeafe);
