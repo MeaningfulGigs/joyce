@@ -122,7 +122,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a href="/">Magic Matches GPT v0.2</a>
+          <a href="/">Magic Matches GPT v0.3</a>
         </div>
       </div>
       {!!debug.length && (
