@@ -62,29 +62,33 @@ export default function Home() {
 
     const response = await getKeywords(userInput);
     const log = response.keywords.toString();
-    console.log(log);
     setDebug((prevDebug) => [...prevDebug, log]);
-
-    // Reset user input
-    setUserInput("");
 
     setMessages((prevMessages) => [
       ...prevMessages,
       {
-        message: "...",
+        message: response.content,
         type: "apiMessage",
       },
     ]);
 
-    const matches = await getMatches(response.keywords);
-    setCreatives(matches);
+    if (response.keywords.length >= 5) {
+      const matches = await getMatches(response.keywords);
+      setCreatives(matches);
 
-    const summary = await getSummary(matches);
+      const summary = await getSummary(matches);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          message: summary,
+          type: "apiMessage",
+        },
+      ]);
+    }
 
-    setMessages((prevMessages) => [
-      ...prevMessages.slice(0, [prevMessages.length - 1]),
-      { message: summary, type: "apiMessage" },
-    ]);
+    // Reset user input
+    setUserInput("");
+
     setLoading(false);
   };
 
@@ -99,11 +103,16 @@ export default function Home() {
     }
   };
 
+  const toggleDebug = (e) => {
+    const element = document.getElementById("debug");
+    element.style.display = "block";
+  };
+
   return (
     <>
       <Head>
         <title>MG Chatbot</title>
-        <meta name="description" content="LangChain documentation chatbot" />
+        <meta name="description" content="Meaningful Gigs chatbot" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link
           rel="icon"
@@ -122,19 +131,17 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a href="/">Magic Matches GPT v0.3</a>
+          <a onClick={toggleDebug}>Magic Matches GPT v0.4</a>
         </div>
       </div>
-      {!!debug.length && (
-        <div className={styles.debug}>
-          <div className={styles.debugheader}>DEBUG</div>
-          <div className={styles.debuglogs}>
-            {debug.map((log) => (
-              <p>Keywords Parsed: {log.replaceAll(",", ", ")}</p>
-            ))}
-          </div>
+      <div id="debug" className={styles.debug}>
+        <div className={styles.debugheader}>DEBUG</div>
+        <div className={styles.debuglogs}>
+          {debug.map((log) => (
+            <p>Keywords Parsed: {log.replaceAll(",", ", ")}</p>
+          ))}
         </div>
-      )}
+      </div>
       <div className={styles.container}>
         <div className={styles.matches}>
           {creatives &&
