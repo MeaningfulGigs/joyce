@@ -240,9 +240,10 @@ export default function Home() {
                       className={styles.avatar}
                     />
                     <div className={styles.creativedata}>
-                      <div>{match.name}</div>
-                      <div>{match.specialties[0]}</div>
-                      <div>{match.specialties[1]}</div>
+                      <h3>{match.name}</h3>
+                      <div>
+                        {match.specialties[0]} • {match.specialties[1]}
+                      </div>
                     </div>
                   </div>
                 </div>

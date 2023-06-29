@@ -16,7 +16,7 @@
   width: 75vw;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   /* display: none; */
   /* border: 1px solid red; */
@@ -25,19 +25,26 @@
 .match {
   display: flex;
   flex-direction: column;
+  /* border: 1px solid red; */
 }
 
 .creativematch {
   display: flex;
   align-items: center;
-  margin: 10px;
-  padding: 0px 20px;
+  padding: 0px 10px;
 }
 
 .creativedata {
-  margin: 10px;
   font-size: 0.75rem;
   font-weight: 500;
+  padding: 10px;
+  color: #30373d;
+}
+
+.creativedata h3 {
+  color: black;
+  font-size: 1rem;
+  padding-bottom: 2px;
 }
 
 .avatar {
@@ -49,7 +56,8 @@
 
 .hero {
   width: 300px;
-  object-fit: contain;
+  height: 175px;
+  object-fit: cover;
   border-radius: 4px;
 }
 
