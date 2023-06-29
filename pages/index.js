@@ -9,6 +9,7 @@ import { getKeywords, getMatches, getSummary } from "../pages/api/chat";
 export default function Home() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [keywords, setKeywords] = useState([]);
   const [creatives, setCreatives] = useState(null);
   const [debug, setDebug] = useState([]);
 
@@ -61,6 +62,9 @@ export default function Home() {
     ]);
 
     const response = await getKeywords(userInput);
+    const totalKeywords = [...new Set([...keywords, ...response.keywords])];
+    setKeywords(totalKeywords);
+
     const log = response.keywords.toString();
     setDebug((prevDebug) => [...prevDebug, log]);
 
@@ -72,11 +76,10 @@ export default function Home() {
       },
     ]);
 
-    if (response.keywords.length >= 5) {
-      const matches = await getMatches(response.keywords);
-      setCreatives(matches);
-
+    if (totalKeywords.length >= 3) {
+      const matches = await getMatches(totalKeywords);
       const summary = await getSummary(matches);
+      setCreatives(matches);
       setMessages((prevMessages) => [
         ...prevMessages,
         {
