@@ -45,7 +45,7 @@
   display: flex;
   flex-direction: column;
   border-radius: 8px;
-  box-shadow: 0px 0px 5px #bfc6c6;
+  box-shadow: 0px 0px 2px #bfc6c6;
 }
 
 .match:hover {
@@ -56,13 +56,13 @@
 .creativematch {
   display: flex;
   align-items: center;
-  padding: 10px 10px;
+  padding: 10px;
 }
 
 .creativedata {
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 10px;
+  padding: 4px 10px;
   color: #30373d;
 }
 

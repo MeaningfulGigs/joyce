@@ -148,7 +148,15 @@ export default function Home() {
           {creatives &&
             creatives.map((match) => {
               return (
-                <div className={styles.match}>
+                <div
+                  className={styles.match}
+                  onClick={() =>
+                    window.open(
+                      `https://showcase.meaningfulgigs.com/portfolios/${match._id}`,
+                      "_blank"
+                    )
+                  }
+                >
                   <div>
                     <img
                       src={`https://assets.meaningfulgigs.com/${match.hero.source}`}
