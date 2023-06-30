@@ -65,7 +65,7 @@ export default function Home() {
     const totalKeywords = [...new Set([...keywords, ...response.keywords])];
     setKeywords(totalKeywords);
 
-    const log = response.keywords.toString();
+    const log = totalKeywords.toString();
     setDebug((prevDebug) => [...prevDebug, log]);
 
     setMessages((prevMessages) => [
@@ -132,7 +132,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches GPT v0.4.2</a>
+          <a onClick={toggleDebug}>Magic Matches GPT v0.5.0</a>
         </div>
       </div>
       <div id="debug" className={styles.debug}>

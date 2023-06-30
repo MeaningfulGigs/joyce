@@ -8,7 +8,7 @@ const JOB_CONTEXT =
 const ANALYSIS_CONTEXT =
   "Again, act as a match-maker. Analyze the designers in the context of my needs and select the top 3. \
   Start off by pretending that you went out and found matches for me. Then, for each designer you selected, give a brief explanation of why you selected them. \
-  Finish by letting me know that I can either click on their profiles to learn more about them if I'm interested, or we can continue the conversation and unpack my needs.";
+  Finish up by asking me what I think about the selection and letting me know that we can continue to refine the search togther.";
 const TONE_CONTEXT =
   "Your tone should be conversational and informal throughout the conversation.  Our relationship is very casual.  \
   Don't make things up.  If you don't know the answer, say 'I don't know'";
