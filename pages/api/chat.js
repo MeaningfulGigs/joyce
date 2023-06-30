@@ -52,7 +52,7 @@ export async function getKeywords(userInput) {
 
 export async function getMatches(keywords) {
   const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
-  const searchUrl = `https://search-dev.meaningfulgigs.com?${params}`;
+  const searchUrl = `https://search.meaningfulgigs.com?${params}`;
   const response = await fetch(searchUrl, {
     method: "GET",
     headers: {
