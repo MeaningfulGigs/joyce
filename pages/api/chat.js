@@ -1,6 +1,6 @@
 import {
   GPT_MESSAGES,
-  FOLLOWUP_CONTEXT,
+  JOB_CONTEXT,
   TAXONOMY,
   ANALYSIS_CONTEXT,
 } from "../../constants";
@@ -15,7 +15,7 @@ const openai = new OpenAIApi(configuration);
 export async function getKeywords(userInput) {
   GPT_MESSAGES.push({
     role: "user",
-    content: userInput,
+    content: `${userInput}. ${JOB_CONTEXT}`,
   });
   const response = await openai.createChatCompletion({
     model: "gpt-3.5-turbo-0613",
