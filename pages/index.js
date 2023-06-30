@@ -76,18 +76,16 @@ export default function Home() {
       },
     ]);
 
-    if (totalKeywords.length >= 3) {
-      const matches = await getMatches(totalKeywords);
-      const summary = await getSummary(matches);
-      setCreatives(matches);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          message: summary,
-          type: "apiMessage",
-        },
-      ]);
-    }
+    const matches = await getMatches(totalKeywords);
+    const summary = await getSummary(matches);
+    setCreatives(matches);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        message: summary,
+        type: "apiMessage",
+      },
+    ]);
 
     // Reset user input
     setUserInput("");

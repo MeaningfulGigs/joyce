@@ -1,4 +1,9 @@
-import { GPT_MESSAGES, TAXONOMY } from "../../constants";
+import {
+  GPT_MESSAGES,
+  FOLLOWUP_CONTEXT,
+  TAXONOMY,
+  ANALYSIS_CONTEXT,
+} from "../../constants";
 
 const { Configuration, OpenAIApi } = require("openai");
 
@@ -64,13 +69,10 @@ export async function getMatches(keywords) {
 export async function getSummary(matches) {
   const matches_context = [
     {
-      role: "assistant",
-      content:
-        "The following JSON documents are profiles of different designers that were found to be similar to your needs.",
-    },
-    {
-      role: "assistant",
-      content: JSON.stringify(matches),
+      role: "system",
+      content: `The following are designer profiles formatted as JSON documents: ${JSON.stringify(
+        matches
+      )}. ${ANALYSIS_CONTEXT}`,
     },
   ];
   GPT_MESSAGES.push(...matches_context);
