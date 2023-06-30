@@ -4,13 +4,14 @@ const TAXONOMY = TAXONOMY_CONTEXT.split(", ");
 const USER_CONTEXT =
   "I'm a hiring manager of design professionals at a large corporation.  I'm trying to find a designer to interview and hire for some specific needs that I have.";
 const JOB_CONTEXT =
-  "Act as a match-maker.  Try to understand my needs, and create a brief summary of them.  I'll provide you a list of keywords to use. You should use around 5. Pretend like you're going to use your summary to look for the designers yourself.";
+  "Act as a match-maker.  Use my prompt to create a brief summary of my needs.  It should only be 2-3 sentences and contain no questions.  Then, pretend like you're going to use your summary to look for the designers yourself and tell me to hold on while you find them.";
 const ANALYSIS_CONTEXT =
   "Again, act as a match-maker. Analyze the designers in the context of my needs and select the top 3. \
   Start off by pretending that you went out and found matches for me. Then, for each designer you selected, give a brief explanation of why you selected them. \
   Finish by letting me know that I can either click on their profiles to learn more about them if I'm interested, or we can continue the conversation and unpack my needs.";
 const TONE_CONTEXT =
-  "Your tone should be conversational and informal throughout the conversation.  Our relationship is very casual.  Don't make things up, but don't act like a robot.";
+  "Your tone should be conversational and informal throughout the conversation.  Our relationship is very casual.  \
+  Don't make things up.  If you don't know the answer, say 'I don't know'";
 const INITIAL_MESSAGE = "Hi there! Tell me about your design needs.";
 
 // initialize GPT messages with system role prompts
@@ -25,7 +26,7 @@ const GPT_MESSAGES = [
   },
   {
     role: "system",
-    content: `Here's a list of design keywords that you have to use when collecting design keywords: ${TAXONOMY_CONTEXT}.`,
+    content: `This is a list of design keywords that you must use when creating a summary of needs.  You should only use around 4-5 keywords from this list: ${TAXONOMY_CONTEXT}.`,
   },
   {
     role: "system",
@@ -37,4 +38,4 @@ const GPT_MESSAGES = [
   },
 ];
 
-export { TAXONOMY, GPT_MESSAGES, ANALYSIS_CONTEXT };
+export { TAXONOMY, GPT_MESSAGES, ANALYSIS_CONTEXT, JOB_CONTEXT };
