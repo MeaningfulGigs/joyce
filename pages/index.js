@@ -4,7 +4,12 @@ import styles from "../styles/Home.module.css";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getKeywords, getMatches, getSummary } from "../pages/api/chat";
+import {
+  converse,
+  getMatches,
+  getKeywords,
+  getSummary,
+} from "../pages/api/chat";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
@@ -61,28 +66,52 @@ export default function Home() {
       { message: userInput, type: "userMessage" },
     ]);
 
-    const response = await getKeywords(userInput);
-    const totalKeywords = [...new Set([...keywords, ...response.keywords])];
-    setKeywords(totalKeywords);
+    let gptMessage = await converse(userInput, "user");
+    console.log(gptMessage);
+    if (gptMessage.finish_reason === "function_call") {
+      const newKeywords = await getKeywords(gptMessage);
+      const totalKeywords = new Set([...keywords, ...newKeywords]);
+      if (
+        ([...keywords].every((keyword) => totalKeywords.has(keyword)) &&
+          totalKeywords.size === keywords.length) ||
+        totalKeywords.size === 0
+      ) {
+        const systemInput =
+          "You haven't collected any new keywords.  Ask a probing question to try and get more detail from the user.";
+        gptMessage = await converse(systemInput);
+        console.log("WHAT THE FCKKKKK");
+      } else {
+        setKeywords([...totalKeywords]);
+        const log = [...totalKeywords].toString();
+        setDebug((prevDebug) => [...prevDebug, log]);
 
-    const log = totalKeywords.toString();
-    setDebug((prevDebug) => [...prevDebug, log]);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            message:
+              "Got it!  Hold on while I look for some designers that match what you're asking for.",
+            type: "apiMessage",
+          },
+        ]);
 
+        const matches = await getMatches([...totalKeywords]);
+        gptMessage = await getSummary(matches);
+        setCreatives(matches);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            message: gptMessage.message.content,
+            type: "apiMessage",
+          },
+        ]);
+      }
+    }
+    console.log("here's the gpt message");
+    console.log(gptMessage.message.content);
     setMessages((prevMessages) => [
       ...prevMessages,
       {
-        message: response.content,
-        type: "apiMessage",
-      },
-    ]);
-
-    const matches = await getMatches(totalKeywords);
-    const summary = await getSummary(matches);
-    setCreatives(matches);
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        message: summary,
+        message: gptMessage.message.content,
         type: "apiMessage",
       },
     ]);
@@ -105,6 +134,7 @@ export default function Home() {
   };
 
   const toggleDebug = (e) => {
+    e.preventDefault();
     const element = document.getElementById("debug");
     element.style.display = "block";
   };
@@ -132,7 +162,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.5.1</a>
+          <a onClick={toggleDebug}>Magic Matches v0.6.0</a>
         </div>
       </div>
       <div id="debug" className={styles.debug}>

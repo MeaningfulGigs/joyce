@@ -377,6 +377,10 @@
     width: 20rem;
   }
 
+  .navlogo:hover {
+    color: red;
+  }
+
   .markdownanswer code {
     white-space: pre-wrap !important;
   }

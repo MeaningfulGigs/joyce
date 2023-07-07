@@ -4,15 +4,20 @@ const TAXONOMY = TAXONOMY_CONTEXT.split(", ");
 const USER_CONTEXT =
   "I'm a hiring manager of design professionals at a large corporation.  I'm trying to find a designer to interview and hire for some specific needs that I have.";
 const JOB_CONTEXT =
-  "Act as a match-maker.  Use my prompt to create a brief summary of my needs.  It should only be 2-3 sentences and contain no questions.  Then, pretend like you're going to use your summary to look for the designers yourself and tell me to hold on while you find them.";
-const ANALYSIS_CONTEXT =
-  "Again, act as a match-maker. Analyze the designers in the context of my needs and select the top 3. \
-  Start off by pretending that you went out and found matches for me. Then, for each designer you selected, give a brief explanation of why you selected them. \
-  Finish up by asking me what I think about the selection and letting me know that we can continue to refine the search togther.";
+  "You are assisting me in the search.  You are more expert than I at analyzing and explaining design information.";
 const TONE_CONTEXT =
   "Your tone should be conversational and informal throughout the conversation.  Our relationship is very casual.  \
-  Don't make things up.  If you don't know the answer, say 'I don't know'";
+  Don't make things up.  If you don't know the answer, just say 'I don't know'";
 const INITIAL_MESSAGE = "Hi there! Tell me about your design needs.";
+const QUESTION_CONTEXT =
+  "Act as a match-maker.  First, go through everything I've told you, and distill all of my needs into around 5 keywords.  They must come from the list that you have of design keywords. \
+  Often, you won't have enough information for any keywords to apply.  In that case, don't make one up - just ask me a followup question. \
+  Once you're certain that at least one keyword applies, let me know you have enough information now, and pretend to go look through your database for designers for me.  Let me know it might take a minute, but you'll be right back.";
+const ANALYSIS_CONTEXT =
+  "Act as a match-maker. Analyze the designers in the context of my needs and select the top 3. \
+  Continue pretending that you went through a database and found matches for me!  You're back with them and want to explain why they were selected for me. \
+  Then, for each designer you selected, give a brief prose explanation of why you selected them. It should be relevant to my design needs that I've been talking to you about. \
+  Finish up by asking me what I think about your choices, and inviting me to continue refining the search with you.";
 
 // initialize GPT messages with system role prompts
 const GPT_MESSAGES = [
@@ -26,7 +31,7 @@ const GPT_MESSAGES = [
   },
   {
     role: "system",
-    content: `This is a list of design keywords that you must use when creating a summary of needs.  You should only use around 4-5 keywords from this list: ${TAXONOMY_CONTEXT}.`,
+    content: `This is a list of design keywords.  Whenever you are asked for design keywords, you should only choose keywords from this list: ${TAXONOMY_CONTEXT}.`,
   },
   {
     role: "system",
@@ -38,4 +43,30 @@ const GPT_MESSAGES = [
   },
 ];
 
-export { TAXONOMY, GPT_MESSAGES, ANALYSIS_CONTEXT, JOB_CONTEXT };
+const GET_MATCHES_FXN = {
+  name: "get_matches",
+  description:
+    "Find relevant designers from a database given one or more design keywords.",
+  parameters: {
+    type: "object",
+    properties: {
+      keywords: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+        description:
+          "The design keywords collected from the conversation with the user",
+      },
+    },
+    required: ["keywords"],
+  },
+};
+
+export {
+  TAXONOMY,
+  GPT_MESSAGES,
+  ANALYSIS_CONTEXT,
+  QUESTION_CONTEXT,
+  GET_MATCHES_FXN,
+};
