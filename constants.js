@@ -11,10 +11,9 @@ const TONE_CONTEXT =
   Don't make things up.  If you don't know the answer, just say 'I don't know'";
 
 const INITIAL_MESSAGE = "Hi there! Tell me about your design needs.";
-const MATCHING_CONTEXT = `Your job is to select design keywords from the following list: ${TAXONOMY} \
-  Only select keywords that you think might be relevant to the user's needs. They keywords you select must be spelled exactly as in the list. \
-  Just go through the list and pull out keywords that are conceptually similar to the user's needs. \
-  If you find any, call the "get_matches" function. If you don't find any, don't make them up - just ask a follow-up question.
+const MATCHING_CONTEXT = `Your job is to select design keywords from the design keyword list you've been provided. \
+  Only select keywords that you think might be relevant to the user's needs. They keywords you select must be spelled EXACTLY as in the list. \
+  If you find one or more keywords, call the "get_matches" function. If you don't find any keywords, don't make them up - just ask a follow-up question.
 `;
 const ANALYSIS_CONTEXT =
   "Act as a match-maker. Analyze the designers in the context of my needs and select the top 3. \
@@ -28,6 +27,10 @@ const MESSAGE_HISTORY = [
   {
     role: "system",
     content: USER_CONTEXT,
+  },
+  {
+    role: "system",
+    content: `The following is your design keyword list; you will be asked to select keywords from this list: ${TAXONOMY_CONTEXT}`,
   },
   {
     role: "system",

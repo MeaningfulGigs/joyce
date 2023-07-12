@@ -72,14 +72,6 @@ export default function Home() {
 
     // logic branch for when GPT requests an API call
     if (gptMessage.finish_reason === "function_call") {
-      // if there is message content as well, render it in the chat
-      if (gptMessage.message.content) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { message: gptMessage.message.content, type: "apiMessage" },
-        ]);
-      }
-
       // retrieve keywords from function arguments
       // and add to any existing keywords
       const newKeywords = await getKeywords(gptMessage);
@@ -119,16 +111,24 @@ export default function Home() {
 
         // next, ask GPT to tell the user there will be a brief
         // hold while matching designers are being found
-        const systemInput =
-          "You now have new keywords!  In just a few words, tell the user to wait while you review their needs and look through available designers.";
-        gptMessage = await converse(systemInput);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            message: gptMessage.message.content,
-            type: "apiMessage",
-          },
-        ]);
+        // if there is message content as well, render it in the chat
+        if (gptMessage.message.content) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { message: gptMessage.message.content, type: "apiMessage" },
+          ]);
+        } else {
+          const systemInput =
+            "You now have new keywords!  In just a few words, tell the user to wait while you review their needs and look through available designers.";
+          gptMessage = await converse(systemInput);
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              message: gptMessage.message.content,
+              type: "apiMessage",
+            },
+          ]);
+        }
 
         // third, call the API to retrieve the matches
         const matches = await getMatches([...totalKeywords]);
@@ -193,7 +193,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.7.0</a>
+          <a onClick={toggleDebug}>Magic Matches v0.7.1</a>
         </div>
       </div>
       <div id="debug" className={styles.debug}>
