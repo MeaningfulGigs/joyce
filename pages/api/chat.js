@@ -1,7 +1,7 @@
 import {
-  GPT_MESSAGES,
-  QUESTION_CONTEXT,
+  MESSAGE_HISTORY,
   TAXONOMY,
+  MATCHING_CONTEXT,
   ANALYSIS_CONTEXT,
   GET_MATCHES_FXN,
 } from "../../constants";
@@ -15,30 +15,36 @@ const openai = new OpenAIApi(configuration);
 
 export async function converse(message, role) {
   if (role == "user") {
-    GPT_MESSAGES.push({
+    MESSAGE_HISTORY.push({
       role: "user",
-      content: `${message}. ${QUESTION_CONTEXT}`,
+      content: message,
+    });
+    MESSAGE_HISTORY.push({
+      role: "system",
+      content: MATCHING_CONTEXT,
     });
   } else {
-    GPT_MESSAGES.push({
+    MESSAGE_HISTORY.push({
       role: "system",
       content: message,
     });
   }
   let response = await openai.createChatCompletion({
     model: "gpt-3.5-turbo-0613",
-    messages: GPT_MESSAGES,
+    messages: MESSAGE_HISTORY,
     functions: [GET_MATCHES_FXN],
   });
 
   let gptMessage = response.data.choices[0];
+  console.log("HI THERE!");
+  console.log(gptMessage);
 
   // call API if GPT invokes function
   // if (gptMessage.finish_reason === "function_call") {
   //   const gptFunc = gptMessage.message.function_call;
 
   //   // include GPT response in chat history
-  //   GPT_MESSAGES.push({
+  //   MESSAGE_HISTORY.push({
   //     role: "assistant",
   //     content: null,
   //     function_call: gptFunc,
@@ -69,10 +75,10 @@ export async function converse(message, role) {
   //       )}. ${ANALYSIS_CONTEXT}`,
   //     },
   //   ];
-  //   GPT_MESSAGES.push(...matches_context);
+  //   MESSAGE_HISTORY.push(...matches_context);
   //   response = await openai.createChatCompletion({
   //     model: "gpt-3.5-turbo-0613",
-  //     messages: GPT_MESSAGES,
+  //     messages: MESSAGE_HISTORY,
   //   });
 
   //   if (response.status !== 200) {
@@ -81,7 +87,7 @@ export async function converse(message, role) {
   //   }
 
   //   gptMessage = response.data.choices[0].message;
-  //   GPT_MESSAGES.push({
+  //   MESSAGE_HISTORY.push({
   //     role: "assistant",
   //     content: gptMessage.content,
   //   });
@@ -92,21 +98,28 @@ export async function converse(message, role) {
   //   matches,
   //   content: response,
   // };
+  if (gptMessage.message.content) {
+    MESSAGE_HISTORY.push({
+      role: "assistant",
+      content: gptMessage.message.content,
+    });
+  }
   return gptMessage;
 }
 
 export async function getKeywords(gptMessage) {
   const gptFunc = gptMessage.message.function_call;
 
-  // include GPT response in chat history
-  GPT_MESSAGES.push({
+  // add function call to chat history
+  MESSAGE_HISTORY.push({
     role: "assistant",
     content: null,
     function_call: gptFunc,
   });
 
-  // parse taxonomy keywords from GPT response
-  let keywords = JSON.parse(gptFunc.arguments).keywords;
+  // parse taxonomy keywords from function arguments
+  const args = JSON.parse(gptFunc.arguments);
+  let keywords = args.keywords.map((arg) => arg.toLowerCase());
   keywords = [
     ...new Set(
       TAXONOMY.map((term) => {
@@ -116,12 +129,14 @@ export async function getKeywords(gptMessage) {
       }).filter(Boolean)
     ),
   ];
+  console.log("here we go!");
+  console.log(args);
+  console.log(keywords);
 
   return keywords;
 }
 
 export async function getMatches(keywords) {
-  console.log(keywords);
   const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
   const searchUrl = `https://search.meaningfulgigs.com?${params}`;
   const response = await fetch(searchUrl, {
@@ -134,7 +149,13 @@ export async function getMatches(keywords) {
 
   const matches = await response.json();
 
-  return matches.slice(0, 3);
+  MESSAGE_HISTORY.push({
+    role: "function",
+    name: "get_matches",
+    content: JSON.stringify(matches.slice(0, 3)),
+  });
+
+  return matches;
 }
 
 export async function getSummary(matches) {
@@ -146,11 +167,11 @@ export async function getSummary(matches) {
       )}. ${ANALYSIS_CONTEXT}`,
     },
   ];
-  GPT_MESSAGES.push(...matches_context);
+  MESSAGE_HISTORY.push(...matches_context);
 
   const response = await openai.createChatCompletion({
     model: "gpt-3.5-turbo-0613",
-    messages: GPT_MESSAGES,
+    messages: MESSAGE_HISTORY,
   });
 
   if (response.status !== 200) {
@@ -159,7 +180,7 @@ export async function getSummary(matches) {
   }
 
   const gptMessage = response.data.choices[0];
-  GPT_MESSAGES.push({
+  MESSAGE_HISTORY.push({
     role: "assistant",
     content: gptMessage.message.content,
   });
