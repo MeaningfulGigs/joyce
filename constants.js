@@ -45,7 +45,7 @@ const MESSAGE_HISTORY = [
 const GET_MATCHES_FXN = {
   name: "get_matches",
   description:
-    "FInd relevant designers from a database given one or more design keywords.",
+    "Find relevant designers from a database given one or more design keywords.",
   parameters: {
     type: "object",
     properties: {
@@ -56,6 +56,24 @@ const GET_MATCHES_FXN = {
         },
         description:
           "The design keywords collected from the conversation with the user",
+      },
+    },
+    required: ["keywords"],
+  },
+};
+
+const GET_SIMILAR_FXN = {
+  name: "get_similar_designers",
+  description: "Given the profile of a designer, find similar designers.",
+  parameters: {
+    type: "object",
+    properties: {
+      keywords: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+        description: "The designer you are trying to find ",
       },
     },
     required: ["keywords"],

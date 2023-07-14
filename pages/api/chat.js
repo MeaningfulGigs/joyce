@@ -36,68 +36,6 @@ export async function converse(message, role) {
   });
 
   let gptMessage = response.data.choices[0];
-  console.log("HI THERE!");
-  console.log(gptMessage);
-
-  // call API if GPT invokes function
-  // if (gptMessage.finish_reason === "function_call") {
-  //   const gptFunc = gptMessage.message.function_call;
-
-  //   // include GPT response in chat history
-  //   MESSAGE_HISTORY.push({
-  //     role: "assistant",
-  //     content: null,
-  //     function_call: gptFunc,
-  //   });
-
-  //   // parse taxonomy keywords from GPT response
-  //   keywords = JSON.parse(gptFunc.arguments).keywords;
-  //   keywords = [
-  //     ...new Set(
-  //       TAXONOMY.map((term) => {
-  //         if (
-  //           keywords.includes(term) ||
-  //           keywords.includes(term.toLowerCase())
-  //         ) {
-  //           return term;
-  //         }
-  //       }).filter(Boolean)
-  //     ),
-  //   ];
-
-  //   matches = await getMatches(keywords);
-
-  //   const matches_context = [
-  //     {
-  //       role: "system",
-  //       content: `The following are designer profiles formatted as JSON documents: ${JSON.stringify(
-  //         matches
-  //       )}. ${ANALYSIS_CONTEXT}`,
-  //     },
-  //   ];
-  //   MESSAGE_HISTORY.push(...matches_context);
-  //   response = await openai.createChatCompletion({
-  //     model: "gpt-3.5-turbo-0613",
-  //     messages: MESSAGE_HISTORY,
-  //   });
-
-  //   if (response.status !== 200) {
-  //     handleError();
-  //     return;
-  //   }
-
-  //   gptMessage = response.data.choices[0].message;
-  //   MESSAGE_HISTORY.push({
-  //     role: "assistant",
-  //     content: gptMessage.content,
-  //   });
-  // }
-
-  // return {
-  //   keywords,
-  //   matches,
-  //   content: response,
-  // };
   if (gptMessage.message.content) {
     MESSAGE_HISTORY.push({
       role: "assistant",
@@ -129,9 +67,6 @@ export async function getKeywords(gptMessage) {
       }).filter(Boolean)
     ),
   ];
-  console.log("here we go!");
-  console.log(args);
-  console.log(keywords);
 
   return keywords;
 }
