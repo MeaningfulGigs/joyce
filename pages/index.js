@@ -5,10 +5,11 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
+  summarize,
+  parse,
   converse,
   getMatches,
-  getKeywords,
-  getSummary,
+  explain,
 } from "../pages/api/chat";
 
 export default function Home() {
@@ -16,7 +17,10 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [keywords, setKeywords] = useState([]);
   const [creatives, setCreatives] = useState(null);
+  const [seenCreatives, setSeenCreatives] = useState([]);
   const [debug, setDebug] = useState([]);
+  const [topic, setTopic] = useState("");
+  const [summary, setSummary] = useState("");
 
   const [messages, setMessages] = useState([
     {
@@ -68,76 +72,45 @@ export default function Home() {
 
     // send user input to GPT and await response
     setLoading(true);
-    let gptMessage = await converse(userInput, "user");
+    const { shortSummary, longSummary } = await summarize(userInput);
+    setTopic(shortSummary);
+    setSummary(longSummary);
+
+    // parse keywords from summary
+    // and add to any existing keywords
+    let newKeywords = await parse(longSummary);
+    const totalKeywords = new Set([...keywords, ...newKeywords]);
+    setKeywords([...totalKeywords]);
+
+    // update keyword logger
+    const log = [...totalKeywords].toString() || "None";
+    setDebug((prevDebug) => [...prevDebug, log]);
+    let gptMessage = await converse([...totalKeywords]);
 
     // logic branch for when GPT requests an API call
     if (gptMessage.finish_reason === "function_call") {
-      // retrieve keywords from function arguments
-      // and add to any existing keywords
-      const newKeywords = await getKeywords(gptMessage);
-      const totalKeywords = new Set([...keywords, ...newKeywords]);
-
-      // logic branch for no new keywords parsed,
-      // or no keywords parsed at all
-      if (
-        ([...keywords].every((keyword) => totalKeywords.has(keyword)) &&
-          totalKeywords.size === keywords.length) ||
-        totalKeywords.size === 0
-      ) {
-        // in this case, tell GPT to ask a follow-up question
-        const log = [...totalKeywords].toString() || "None";
-        setDebug((prevDebug) => [...prevDebug, log]);
-        const systemInput =
-          "You haven't collected any new keywords.  Ask a probing question to try and get more detail from the user.";
-        gptMessage = await converse(systemInput);
+      // if there is message content as well, render it in the chat
+      if (gptMessage.message.content) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { message: gptMessage.message.content, type: "apiMessage" },
+        ]);
       }
-      // logic branch for when GPT has parsed new keywords
-      else {
-        // in this case, a few actions occur...
 
-        // first, update keyword log
-        setKeywords([...totalKeywords]);
-        const log = [...totalKeywords].toString() || "None";
-        setDebug((prevDebug) => [...prevDebug, log]);
+      // third, call the API to retrieve the matches
+      let matches = await getMatches([...totalKeywords]);
 
-        // setMessages((prevMessages) => [
-        //   ...prevMessages,
-        //   {
-        //     message:
-        //       "Got it!  Hold on while I look for some designers that match what you're asking for.",
-        //     type: "apiMessage",
-        //   },
-        // ]);
+      // filter out any candidates that have already been shown
+      matches = matches.filter((m) => !seenCreatives.includes(m["_id"]));
 
-        // next, ask GPT to tell the user there will be a brief
-        // hold while matching designers are being found
-        // if there is message content as well, render it in the chat
-        if (gptMessage.message.content) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            { message: gptMessage.message.content, type: "apiMessage" },
-          ]);
-        } else {
-          const systemInput =
-            "You now have new keywords!  In just a few words, tell the user to wait while you review their needs and look through available designers.";
-          gptMessage = await converse(systemInput);
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              message: gptMessage.message.content,
-              type: "apiMessage",
-            },
-          ]);
-        }
+      // fourth, ask GPT to explain the results
+      const top3 = matches.slice(0, 3);
+      gptMessage = await explain(top3, summary);
+      setCreatives(top3);
 
-        // third, call the API to retrieve the matches
-        const matches = await getMatches([...totalKeywords]);
-
-        // fourth, ask GPT to explain the results
-        const top3 = matches.slice(0, 3);
-        gptMessage = await getSummary(top3);
-        setCreatives(top3);
-      }
+      // add Top 3 results to history of seen candidates
+      const candidateIds = top3.map((c) => c._id);
+      setSeenCreatives((prevCreatives) => [...prevCreatives, ...candidateIds]);
     }
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -146,7 +119,6 @@ export default function Home() {
         type: "apiMessage",
       },
     ]);
-
     // Reset user input
     setUserInput("");
 
@@ -193,7 +165,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.7.2</a>
+          <a onClick={toggleDebug}>Magic Matches v0.8.0</a>
         </div>
       </div>
       <div id="debug" className={styles.debug}>
@@ -204,6 +176,13 @@ export default function Home() {
           ))}
         </div>
       </div>
+      {topic && summary && (
+        <div id="summaries" className={styles.summaries}>
+          <h4>{topic}</h4>
+          <br />
+          <h5>{summary}</h5>
+        </div>
+      )}
       <div className={styles.container}>
         <div className={styles.matches}>
           {creatives &&
