@@ -56,7 +56,7 @@ export async function parse(message) {
                   There are two rules to how you can choose the tags:\n\
                   (1) They MUST come from this list and spelled identically: ${TAXONOMY}\n\
                   (2) They MUST be relevant to the needs of the user in the conversation\n\n\
-                  Provide your answer as JSON in the following format: {"keywords": [{keyword1}, {keyword2}, ...]}`,
+                  Provide your answer as JSON in the following format: {"keywords": [{tag1}, {tag2}, ...]}`,
       },
       {
         role: "user",
@@ -101,33 +101,7 @@ export async function converse(keywords) {
   return gptMessage;
 }
 
-export async function getKeywords(gptMessage) {
-  const gptFunc = gptMessage.message.function_call;
-
-  // add function call to chat history
-  MESSAGE_HISTORY.push({
-    role: "assistant",
-    content: null,
-    function_call: gptFunc,
-  });
-
-  // parse taxonomy keywords from function arguments
-  const args = JSON.parse(gptFunc.arguments);
-  let keywords = args.keywords.map((arg) => arg.toLowerCase());
-  keywords = [
-    ...new Set(
-      TAXONOMY.map((term) => {
-        if (keywords.includes(term) || keywords.includes(term.toLowerCase())) {
-          return term;
-        }
-      }).filter(Boolean)
-    ),
-  ];
-
-  return keywords;
-}
-
-export async function getMatches(keywords) {
+export async function match(keywords) {
   const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
   const searchUrl = `https://search.meaningfulgigs.com?${params}`;
   const response = await fetch(searchUrl, {
@@ -150,33 +124,25 @@ export async function getMatches(keywords) {
 }
 
 export async function explain(matches, summary) {
-  const matches_context = [
-    {
-      role: "system",
-      content: ANALYSIS_CONTEXT,
-    },
-    {
-      role: "system",
-      content: `Designer Profiles (formatted as JSON): ${JSON.stringify(
-        matches
-      )}`,
-    },
-    {
-      role: "user",
-      content: `Summary: ${summary}`,
-    },
-  ];
-  MESSAGE_HISTORY.push(...matches_context);
-
   const response = await openai.createChatCompletion({
     model: "gpt-3.5-turbo-0613",
-    messages: MESSAGE_HISTORY,
+    messages: [
+      {
+        role: "system",
+        content: ANALYSIS_CONTEXT,
+      },
+      {
+        role: "system",
+        content: `Designer Profiles (formatted as JSON): ${JSON.stringify(
+          matches
+        )}`,
+      },
+      {
+        role: "user",
+        content: summary,
+      },
+    ],
   });
-
-  if (response.status !== 200) {
-    handleError();
-    return;
-  }
 
   const gptMessage = response.data.choices[0];
   MESSAGE_HISTORY.push({

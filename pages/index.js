@@ -4,13 +4,7 @@ import styles from "../styles/Home.module.css";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
-import {
-  summarize,
-  parse,
-  converse,
-  getMatches,
-  explain,
-} from "../pages/api/chat";
+import { summarize, parse, converse, match, explain } from "../pages/api/chat";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
@@ -42,19 +36,6 @@ export default function Home() {
   useEffect(() => {
     textAreaRef.current.focus();
   }, []);
-
-  // Handle errors
-  const handleError = () => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        message: "Oops! There seems to be an error. Please try again.",
-        type: "apiMessage",
-      },
-    ]);
-    setLoading(false);
-    setUserInput("");
-  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -98,7 +79,7 @@ export default function Home() {
       }
 
       // third, call the API to retrieve the matches
-      let matches = await getMatches([...totalKeywords]);
+      let matches = await match([...totalKeywords]);
 
       // filter out any candidates that have already been shown
       matches = matches.filter((m) => !seenCreatives.includes(m["_id"]));
@@ -165,7 +146,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.8.0</a>
+          <a onClick={toggleDebug}>Magic Matches v0.8.1</a>
         </div>
       </div>
       <div id="debug" className={styles.debug}>
