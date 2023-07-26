@@ -85,13 +85,13 @@ export default function Home() {
       matches = matches.filter((m) => !seenCreatives.includes(m["_id"]));
 
       // fourth, ask GPT to explain the results
-      const top3 = matches.slice(0, 3);
-      gptMessage = await explain(top3, summary);
-      setCreatives(top3);
+      const topMatches = matches.slice(0, 3);
+      const topIds = topMatches.map((c) => c._id);
+      gptMessage = await explain(topIds, summary);
+      setCreatives(topMatches);
 
       // add Top 3 results to history of seen candidates
-      const candidateIds = top3.map((c) => c._id);
-      setSeenCreatives((prevCreatives) => [...prevCreatives, ...candidateIds]);
+      setSeenCreatives((prevCreatives) => [...prevCreatives, ...topIds]);
     }
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -146,22 +146,25 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.8.1</a>
-        </div>
-      </div>
-      <div id="debug" className={styles.debug}>
-        <div className={styles.debugheader}>DEBUG</div>
-        <div className={styles.debuglogs}>
-          {debug.map((log) => (
-            <p>Keywords Parsed: {log.replaceAll(",", ", ")}</p>
-          ))}
+          <a onClick={toggleDebug}>Magic Matches v0.8.5</a>
         </div>
       </div>
       {topic && summary && (
-        <div id="summaries" className={styles.summaries}>
-          <h4>{topic}</h4>
-          <br />
-          <h5>{summary}</h5>
+        <div id="debug" className={styles.debugcontainer}>
+          <div id="summaries" className={styles.summaries}>
+            <h6>SUMMARIES</h6>
+            <h5>{summary}</h5>
+          </div>
+          <div className={styles.debug}>
+            <div className={styles.debugheader}>
+              <h6>KEYWORDS</h6>
+            </div>
+            <div className={styles.debuglogs}>
+              {debug.map((log) => (
+                <h6>{log.replaceAll(",", ", ")}</h6>
+              ))}
+            </div>
+          </div>
         </div>
       )}
       <div className={styles.container}>
