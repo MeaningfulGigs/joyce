@@ -21,8 +21,9 @@ const SYSTEM_CONTEXT =
 
 const INITIAL_MESSAGE = "Hi there! Tell me about your design needs.";
 
-const PARSE_CONTEXT = `You will be presented with a summary of a conversation between a user and an AI and your job is to provide a set of tags from a list you are given.\n\n\
-    There are two rules to how you can choose the tags:\n\
+const PARSE_CONTEXT = `You will be presented with a conversation between a user and an AI. \
+    Your job is to provide a set of relevant tags from a list you are given.\n\n\
+    There are two rules you MUST follow when choosing the tags:\n\
     (1) They MUST come from this list and spelled identically: ${TAXONOMY_CONTEXT}\n\
     (2) They MUST be relevant to the needs of the user in the conversation\n\n\
     Provide your answer as JSON in the following format: {"keywords": [{tag1}, {tag2}, ...]}`;
@@ -38,7 +39,7 @@ const EXPLAIN_CONTEXT =
   - Your response should be numbered for each Creative.  Use 2-3 sentences, and only use prose: no bullet points.\n\
   - Use markdown to format your response.  The Creative names should be **bold**, and any info about the Creative that is aligned with the hiring manager's needs should be *italicized*\n\
   - After the explanations, finish by asking for the hiring manager's thoughts.\n\
-  - Throughout, you should be casual and pretty informal.  You're an expert, but you're also the hiring manager's friend.";
+  - Throughout, you should be casual. You're an expert, but you're also the hiring manager's friend.  But not overly informal: this is still a conversation in the professional context.";
 
 // initialize GPT messages
 const MESSAGE_HISTORY = [
@@ -51,6 +52,8 @@ const MESSAGE_HISTORY = [
     content: INITIAL_MESSAGE,
   },
 ];
+
+const SEEN_CREATIVES = new Set();
 
 const GET_MATCHES_FXN = {
   name: "get_matches",
@@ -79,4 +82,5 @@ export {
   PARSE_CONTEXT,
   EXPLAIN_CONTEXT,
   GET_MATCHES_FXN,
+  SEEN_CREATIVES,
 };

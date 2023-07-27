@@ -1,5 +1,6 @@
 import {
   MESSAGE_HISTORY,
+  SEEN_CREATIVES,
   PARSE_CONTEXT,
   SUMMARY_CONTEXT,
   EXPLAIN_CONTEXT,
@@ -15,27 +16,132 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-export async function summarize(message) {
+// PRIMARY FUNCTION: chat
+export async function chat(userInput) {
   MESSAGE_HISTORY.push({
     role: "user",
-    content: message,
+    content: userInput,
   });
 
+  // remove system prompts before summarizing/parsing
   const chatHistory = MESSAGE_HISTORY.filter(
     (message) => message.role !== "system"
   );
+
+  // generate a summary of the chat history
+  const responses = await Promise.all([
+    summarize(chatHistory),
+    parse(chatHistory),
+  ]);
+  const [summaries, keywords] = responses;
+  const { shortSummary, longSummary } = summaries;
+
+  MESSAGE_HISTORY.push({
+    role: "system",
+    content: `Current Selected Tags: ${keywords}`,
+  });
+
+  let response = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 0.5,
+    messages: MESSAGE_HISTORY,
+    functions: [GET_MATCHES_FXN],
+  });
+
+  let gptMessage = response.data.choices[0];
+  let chatResponse = gptMessage.message.content;
+  if (chatResponse) {
+    MESSAGE_HISTORY.push({
+      role: "assistant",
+      content: chatResponse,
+    });
+  }
+
+  return {
+    type: gptMessage.finish_reason,
+    message: chatResponse,
+    topic: shortSummary,
+    summary: longSummary,
+    keywords,
+  };
+}
+
+export async function match(keywords, summary) {
+  const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
+  const searchUrl = `https://search.meaningfulgigs.com?${params}`;
+  const matchResponse = await fetch(searchUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.RIVERA_TOKEN}`,
+    },
+  });
+  let matches = await matchResponse.json();
+
+  // filter out any candidates that have already been shown
+  matches = matches.filter((m) => !SEEN_CREATIVES.has(m["_id"]));
+
+  // reduce to the Top 3
+  matches = matches.slice(0, 3);
+  const topIds = matches.map((c) => c._id);
+
+  // add Top 3 results to history of seen candidates
+  topIds.map((id) => SEEN_CREATIVES.add(id));
+
+  // retrieve profiles for the Top 3 matches
+  const matchProfiles = topIds.map((id) => CREATIVE_DATA[id]);
+
+  MESSAGE_HISTORY.push({
+    role: "function",
+    name: "get_matches",
+    content: JSON.stringify(matchProfiles),
+  });
+
   const response = await openai.createChatCompletion({
     model: "gpt-4-0613",
+    temperature: 0.5,
     messages: [
       {
         role: "system",
-        content: SUMMARY_CONTEXT,
+        content: EXPLAIN_CONTEXT,
       },
       {
         role: "user",
-        content: JSON.stringify(chatHistory),
+        content: `Creative Profiles (formatted as JSON):\n\
+                  ${JSON.stringify(matchProfiles)}\n\n\
+                  Summary:\n\
+                  ${summary}`,
       },
     ],
+  });
+
+  const explanations = response.data.choices[0].message.content;
+  MESSAGE_HISTORY.push({
+    role: "assistant",
+    content: explanations,
+  });
+
+  return {
+    matches,
+    message: explanations,
+  };
+}
+
+export async function summarize(chatHistory) {
+  const messages = [
+    {
+      role: "system",
+      content: SUMMARY_CONTEXT,
+    },
+    {
+      role: "user",
+      content: JSON.stringify(chatHistory),
+    },
+  ];
+  const response = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 0,
+    messages,
   });
 
   const gptMessage = response.data.choices[0].message.content;
@@ -44,7 +150,7 @@ export async function summarize(message) {
   return summaries;
 }
 
-export async function parse(message) {
+export async function parse(chatHistory) {
   const messages = [
     {
       role: "system",
@@ -52,11 +158,11 @@ export async function parse(message) {
     },
     {
       role: "user",
-      content: message,
+      content: JSON.stringify(chatHistory),
     },
   ];
   const response = await openai.createChatCompletion({
-    model: "gpt-4-0613",
+    model: "gpt-3.5-turbo-0613",
     temperature: 0,
     messages,
   });
@@ -74,80 +180,4 @@ export async function parse(message) {
   ];
 
   return keywords;
-}
-
-export async function converse(keywords) {
-  MESSAGE_HISTORY.push({
-    role: "system",
-    content: `Current Selected Tags: ${keywords}`,
-  });
-  let response = await openai.createChatCompletion({
-    model: "gpt-4-0613",
-    temperature: 0.25,
-    messages: MESSAGE_HISTORY,
-    functions: [GET_MATCHES_FXN],
-  });
-
-  let gptMessage = response.data.choices[0];
-  if (gptMessage.message.content) {
-    MESSAGE_HISTORY.push({
-      role: "assistant",
-      content: gptMessage.message.content,
-    });
-  }
-  return gptMessage;
-}
-
-export async function match(keywords) {
-  const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
-  const searchUrl = `https://search.meaningfulgigs.com?${params}`;
-  const response = await fetch(searchUrl, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.RIVERA_TOKEN}`,
-    },
-  });
-
-  const matches = await response.json();
-
-  MESSAGE_HISTORY.push({
-    role: "function",
-    name: "get_matches",
-    content: JSON.stringify(matches.slice(0, 3)),
-  });
-
-  return matches;
-}
-
-export async function explain(topIds, summary) {
-  const matchProfiles = topIds.map((id) => CREATIVE_DATA[id]);
-  const response = await openai.createChatCompletion({
-    model: "gpt-4-0613",
-    temperature: 0.75,
-    messages: [
-      {
-        role: "system",
-        content: EXPLAIN_CONTEXT,
-      },
-      {
-        role: "system",
-        content: `Creative Profiles (formatted as JSON): ${JSON.stringify(
-          matchProfiles
-        )}`,
-      },
-      {
-        role: "system",
-        content: summary,
-      },
-    ],
-  });
-
-  const gptMessage = response.data.choices[0];
-  MESSAGE_HISTORY.push({
-    role: "assistant",
-    content: gptMessage.message.content,
-  });
-
-  return gptMessage;
 }

@@ -4,14 +4,13 @@ import styles from "../styles/Home.module.css";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
-import { summarize, parse, converse, match, explain } from "../pages/api/chat";
+import { chat, match } from "../pages/api/chat";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [keywords, setKeywords] = useState([]);
   const [creatives, setCreatives] = useState(null);
-  const [seenCreatives, setSeenCreatives] = useState([]);
   const [debug, setDebug] = useState([]);
   const [topic, setTopic] = useState("");
   const [summary, setSummary] = useState("");
@@ -53,50 +52,34 @@ export default function Home() {
 
     // send user input to GPT and await response
     setLoading(true);
-    const { shortSummary, longSummary } = await summarize(userInput);
-    setTopic(shortSummary);
-    setSummary(longSummary);
+    let response = await chat(userInput);
 
-    // parse keywords from summary
-    // and add to any existing keywords
-    let newKeywords = await parse(longSummary);
-    const totalKeywords = new Set([...keywords, ...newKeywords]);
-    setKeywords([...totalKeywords]);
+    setTopic(response.topic);
+    setSummary(response.summary);
+    setKeywords(response.keywords);
 
     // update keyword logger
-    const log = [...totalKeywords].toString() || "None";
+    const log = [...response.keywords].toString() || "None";
     setDebug((prevDebug) => [...prevDebug, log]);
-    let gptMessage = await converse([...totalKeywords]);
 
     // logic branch for when GPT requests an API call
-    if (gptMessage.finish_reason === "function_call") {
-      // if there is message content as well, render it in the chat
-      if (gptMessage.message.content) {
+    if (response.type === "function_call") {
+      // render the accompanying message in the chat
+      if (response.message) {
         setMessages((prevMessages) => [
           ...prevMessages,
-          { message: gptMessage.message.content, type: "apiMessage" },
+          { message: response.message, type: "apiMessage" },
         ]);
       }
 
-      // third, call the API to retrieve the matches
-      let matches = await match([...totalKeywords]);
-
-      // filter out any candidates that have already been shown
-      matches = matches.filter((m) => !seenCreatives.includes(m["_id"]));
-
-      // fourth, ask GPT to explain the results
-      const topMatches = matches.slice(0, 3);
-      const topIds = topMatches.map((c) => c._id);
-      gptMessage = await explain(topIds, summary);
-      setCreatives(topMatches);
-
-      // add Top 3 results to history of seen candidates
-      setSeenCreatives((prevCreatives) => [...prevCreatives, ...topIds]);
+      // call the API to retrieve the matches
+      response = await match(keywords, summary);
+      setCreatives(response.matches);
     }
     setMessages((prevMessages) => [
       ...prevMessages,
       {
-        message: gptMessage.message.content,
+        message: response.message,
         type: "apiMessage",
       },
     ]);
@@ -146,7 +129,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.8.5</a>
+          <a onClick={toggleDebug}>Magic Matches v0.8.6</a>
         </div>
       </div>
       {topic && summary && (
