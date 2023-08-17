@@ -4,7 +4,8 @@ import styles from "../styles/Home.module.css";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
-import { chat, match } from "../pages/api/chat";
+import { chat } from "../pages/api/chat";
+import { match } from "../pages/api/functions";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
@@ -13,7 +14,7 @@ export default function Home() {
   const [creatives, setCreatives] = useState(null);
   const [debug, setDebug] = useState([]);
   const [topic, setTopic] = useState("");
-  const [summary, setSummary] = useState("");
+  const [description, setDescription] = useState("");
 
   const [messages, setMessages] = useState([
     {
@@ -55,7 +56,7 @@ export default function Home() {
     let response = await chat(userInput);
 
     setTopic(response.topic);
-    setSummary(response.summary);
+    setDescription(response.description);
     setKeywords(response.keywords);
 
     // update keyword logger
@@ -63,19 +64,19 @@ export default function Home() {
     setDebug((prevDebug) => [...prevDebug, log]);
 
     // logic branch for when GPT requests an API call
-    if (response.type === "function_call") {
-      // render the accompanying message in the chat
-      if (response.message) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { message: response.message, type: "apiMessage" },
-        ]);
-      }
+    // if (response.type === "function_call") {
+    //   // render the accompanying message in the chat
+    //   if (response.message) {
+    //     setMessages((prevMessages) => [
+    //       ...prevMessages,
+    //       { message: response.message, type: "apiMessage" },
+    //     ]);
+    //   }
 
-      // call the API to retrieve the matches
-      response = await match(keywords, summary);
-      setCreatives(response.matches);
-    }
+    //   // call the API to retrieve the matches
+    //   response = await match(response.keywords, response.description);
+    //   setCreatives(response.matches);
+    // }
     setMessages((prevMessages) => [
       ...prevMessages,
       {
@@ -129,14 +130,14 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.8.6</a>
+          <a onClick={toggleDebug}>Magic Matches v0.9.0</a>
         </div>
       </div>
-      {topic && summary && (
+      {topic && description && (
         <div id="debug" className={styles.debugcontainer}>
           <div id="summaries" className={styles.summaries}>
-            <h6>SUMMARIES</h6>
-            <h5>{summary}</h5>
+            <h6>SUMMARY</h6>
+            <h5>{description}</h5>
           </div>
           <div className={styles.debug}>
             <div className={styles.debugheader}>
