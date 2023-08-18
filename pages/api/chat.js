@@ -1,5 +1,11 @@
-import { GPT_FUNCTIONS, ORCHESTRATE_CONTEXT } from "../../constants";
-import { summarize, parse } from "./functions";
+import {
+  orchestrate,
+  summarize,
+  parse,
+  followup,
+  match,
+  refocus,
+} from "./functions";
 
 import OpenAI from "openai";
 import MessageHistory from "./history";
@@ -24,42 +30,30 @@ export async function chat(userInput) {
     parse(msgHistory.chat),
   ]);
   const [summary, keywords] = responses;
-  const { topic, description } = summary;
 
   const summaryMessage = `
     Summary:
-    ${topic}
-    ${description}
+    ${summary}
   `;
 
-  let response = await openai.chat.completions.create({
-    model: "gpt-4-0613",
-    temperature: 0.5,
-    messages: [
-      {
-        role: "system",
-        content: ORCHESTRATE_CONTEXT,
-      },
-      {
-        role: "system",
-        content: summaryMessage,
-      },
-    ],
-    functions: GPT_FUNCTIONS,
-  });
+  // call the Orchestrate-Agent
+  let response = await orchestrate(summaryMessage);
 
-  // parse response and add to chat history
-  let gptMessage = response.choices[0];
-  let chatResponse = gptMessage.message.content;
-  if (chatResponse) {
-    msgHistory.add("assistant", chatResponse);
+  const fxnName = response.message.function_call.name;
+  const fxnArgs = response.message.function_call.arguments;
+
+  if (fxnName === "refocus") {
+    response = await refocus(summaryMessage);
+  } else if (fxnName === "get_creative_matches") {
+    response = await match(keywords, summaryMessage);
+  } else if (fxnName === "ask_followup") {
+    response = await followup(summaryMessage);
   }
 
   return {
-    type: gptMessage.finish_reason,
-    message: chatResponse,
-    topic,
-    description,
+    message: response.message,
+    summary,
     keywords,
+    action: fxnName,
   };
 }

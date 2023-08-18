@@ -3,15 +3,12 @@ const TAXONOMY_CONTEXT =
 const TAXONOMY = TAXONOMY_CONTEXT.split(", ");
 
 const SUMMARIZE_CONTEXT = `
-  You will receive a chat history between a Hiring Manager and an AI.
-  Your task is to provide TWO summaries of the chat history.
+  You will be given a Chat History between a hiring manager and an AI.
+  Your job is to summarize the Chat History from the point-of-view of the hiring manager.
 
-  The only difference between the two summaries is the length.
-  One must be 8 words or fewer ("topic"). The other should be about a paragraph ("description").
-  If there's not enough information, respond with "N/A" instead of making up facts.
-
-  Provide your answer as JSON in the following format:
-  {"topic": {topic}, "description": {description}}
+  Your summary should be up to a paragraph in length, and should be written as though you are the Hiring Manager.
+  You should use the first-person ("I need a designer who can...") and only use information from the Chat History.
+  Don't make anything up. If you don't know enough to summarize, write "N/A"
 `;
 
 const PARSE_CONTEXT = `
@@ -44,33 +41,50 @@ const SYSTEM_CONTEXT = `
 const ORCHESTRATE_CONTEXT = `
   You will be given a summary of a conversation between a Hiring Manager and an AI. You have to decide what to do next.
   You will be given a set of functions that represent the different actions you can take.
-  Your job is to select the function that takes the best next action given the conversation so far, and explain your selection.
-
-  RULES:
-  - You should always call exactly one function from the set you are given
-  - You should always provide a 1-2 sentence prose response detailing exactly why you selected that specific function
+  Your job is to call the function that takes the best action given the conversation so far.
+  
+  You MUST ALWAYS call one of the functions that you have been provided.
 `;
 
 const INITIAL_MESSAGE = "Hi there! Tell me about your design needs.";
 
-const EXPLAIN_CONTEXT =
-  "Instructions:\n\
-  - You will be given the profiles of Creative professionals who are candidates for a job opening.\n\
-  - You will also be given a summary of the job requirements for an opening that the user, a hiring manager, is trying to fill.\n\
-  - Pretend that you personally selected the three Creatives for the user. Your job is to explain why each Creative is a good match.\n\
-  - Use the information you're given about each Creative to specifically connect them with the job requirements.\n\
-  - Use projects and skills to create a compelling explanation, especially mentioning any experience with companies that are well-known.\n\
-  Formatting:\n\
-  - Your response should be numbered for each Creative.  Use 2-3 sentences, and only use prose: no bullet points.\n\
-  - Use markdown to format your response.  The Creative names should be **bold**, and any info about the Creative that is aligned with the hiring manager's needs should be *italicized*\n\
-  - After the explanations, finish by asking for the hiring manager's thoughts.\n\
-  - Throughout, you should be casual. You're an expert, but you're also the hiring manager's friend.  But not overly informal: this is still a conversation in the professional context.";
+const EXPLAIN_CONTEXT = `
+  You will be given a summary of a conversation between a Hiring Manager and an AI.
+  The conversation is regarding a position for a Creative that the Hiring Manager is trying to fill.
+  You will also be given the profile of a Creative professional who is a potential candidate.
+
+  Pretend that you personally selected the Creative for the user. Your job is to explain why the Creative is a good match.
+  Use the Creative's profile to specifically connect them with the job requirements. Use projects and skills to create a compelling explanation
+  If the Creative has experience with any well-known companies, make sure you mention that too.
+
+  Formatting:
+  - Use 2-3 sentences, and only use prose: no bullet points.
+  - Use markdown to format your response.  The Creative's name should be **bold**, and any info about the Creative that is aligned with the Hiring Manager's needs should be *italicized*
+`;
+
+const FOLLOWUP_CONTEXT = `
+  You will be given a summary of a conversation between a Hiring Manager and an AI.
+  Your job is to collect more information about the needs of the Hiring Manager.
+
+  You know they are trying to hire a Creative professional for a position they nave open.
+  In order to match them with your team of Creatives, you need to know more from the Hiring Manager.
+  For instance, you can ask about specific skills, tools, or industries that they are interested in.
+
+  You can assume the Hiring Manager wants a senior-level Creative who is available immediately.
+  Everyone on your team meets those requirements. But you need more information to make a high-quality match.
+`;
+
+const REFOCUS_CONTEXT = `
+  You will be given a summary of a conversation between a Hiring Manager and an AI.
+  The conversation has gotten off the topic of hiring creative professionals.
+  Your job is to bring the conversation back to that topic.
+`;
 
 const SEEN_CREATIVES = new Set();
 
 const GPT_FUNCTIONS = [
   {
-    name: "match",
+    name: "get_creative_matches",
     description:
       "Finds relevant Creatives from a database given an array of at least three tags.  The more tags that are supplied, the more relevant the results.",
     parameters: {
@@ -89,7 +103,7 @@ const GPT_FUNCTIONS = [
     },
   },
   {
-    name: "get_creative",
+    name: "get_creative_detail",
     description:
       "Finds a specific Creative professional from a database and provides a custom profile for them based on the user's needs.",
     parameters: {
@@ -114,7 +128,7 @@ const GPT_FUNCTIONS = [
     },
   },
   {
-    name: "follow_up",
+    name: "ask_followup",
     description:
       "Asks a follow-up question to the user in order to collect more information about the user's design needs.  This function should be called when there are not enough tags to call `match`.",
     parameters: {
@@ -148,7 +162,9 @@ export {
   SUMMARIZE_CONTEXT,
   PARSE_CONTEXT,
   ORCHESTRATE_CONTEXT,
+  FOLLOWUP_CONTEXT,
   EXPLAIN_CONTEXT,
+  REFOCUS_CONTEXT,
   GPT_FUNCTIONS,
   SEEN_CREATIVES,
 };

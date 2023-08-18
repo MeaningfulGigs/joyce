@@ -13,8 +13,7 @@ export default function Home() {
   const [keywords, setKeywords] = useState([]);
   const [creatives, setCreatives] = useState(null);
   const [debug, setDebug] = useState([]);
-  const [topic, setTopic] = useState("");
-  const [description, setDescription] = useState("");
+  const [summary, setSummary] = useState("");
 
   const [messages, setMessages] = useState([
     {
@@ -55,32 +54,17 @@ export default function Home() {
     setLoading(true);
     let response = await chat(userInput);
 
-    setTopic(response.topic);
-    setDescription(response.description);
+    setSummary(response.summary);
     setKeywords(response.keywords);
 
-    // update keyword logger
-    const log = [...response.keywords].toString() || "None";
+    // log information about GPT results
+    const log = `Action: ${response.action}`;
     setDebug((prevDebug) => [...prevDebug, log]);
 
-    // logic branch for when GPT requests an API call
-    // if (response.type === "function_call") {
-    //   // render the accompanying message in the chat
-    //   if (response.message) {
-    //     setMessages((prevMessages) => [
-    //       ...prevMessages,
-    //       { message: response.message, type: "apiMessage" },
-    //     ]);
-    //   }
-
-    //   // call the API to retrieve the matches
-    //   response = await match(response.keywords, response.description);
-    //   setCreatives(response.matches);
-    // }
     setMessages((prevMessages) => [
       ...prevMessages,
       {
-        message: response.message,
+        message: response.message.content,
         type: "apiMessage",
       },
     ]);
@@ -133,24 +117,29 @@ export default function Home() {
           <a onClick={toggleDebug}>Magic Matches v0.9.0</a>
         </div>
       </div>
-      {topic && description && (
-        <div id="debug" className={styles.debugcontainer}>
-          <div id="summaries" className={styles.summaries}>
-            <h6>SUMMARY</h6>
-            <h5>{description}</h5>
-          </div>
-          <div className={styles.debug}>
-            <div className={styles.debugheader}>
-              <h6>KEYWORDS</h6>
+
+      <div id="debug" className={styles.debugcontainer}>
+        {summary && keywords && (
+          <>
+            <div id="summaries" className={styles.summaries}>
+              <h6>SUMMARY & KEYWORDS</h6>
+              <h5>{summary}</h5>
+              <p>{keywords.toString().replaceAll(",", ", ")}</p>
             </div>
-            <div className={styles.debuglogs}>
-              {debug.map((log) => (
-                <h6>{log.replaceAll(",", ", ")}</h6>
-              ))}
+            <div className={styles.debug}>
+              <div className={styles.debugheader}>
+                <h6>MODEL LOG</h6>
+              </div>
+              <div className={styles.debuglogs}>
+                {debug.map((log) => (
+                  <h6>{log}</h6>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
+
       <div className={styles.container}>
         <div className={styles.matches}>
           {creatives &&

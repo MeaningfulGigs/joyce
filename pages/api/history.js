@@ -31,6 +31,7 @@ export default class MessageHistory {
     this.messages.push({
       role,
       content,
+      name,
     });
 
     return this.messages;

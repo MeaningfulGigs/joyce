@@ -1,10 +1,14 @@
 import {
   MESSAGE_HISTORY,
   SEEN_CREATIVES,
+  ORCHESTRATE_CONTEXT,
   PARSE_CONTEXT,
   SUMMARIZE_CONTEXT,
   EXPLAIN_CONTEXT,
+  REFOCUS_CONTEXT,
+  GPT_FUNCTIONS,
   TAXONOMY,
+  FOLLOWUP_CONTEXT,
 } from "../../constants";
 import { CREATIVE_DATA } from "../../creative_data";
 
@@ -15,6 +19,45 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
+export async function orchestrate(summary) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4-0613",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: ORCHESTRATE_CONTEXT,
+      },
+      {
+        role: "system",
+        content: `
+            ===============================
+
+            Summary:
+            ${summary},
+
+            ===============================
+        `,
+      },
+    ],
+    functions: GPT_FUNCTIONS,
+  });
+
+  const gptMessage = response.choices[0];
+
+  if (gptMessage.finish_reason !== "function_call") {
+    const content = gptMessage.message.content;
+    if (content.startsWith("functions")) {
+      const fxnName = content.replace("functions.", "").replace("()", "");
+      console.log(`OH SHIT: ${fxnName}`);
+      return {
+        message: { function_call: { name: fxnName, arguments: [] } },
+      };
+    }
+  }
+  return gptMessage;
+}
+
 export async function summarize(chatHistory) {
   const messages = [
     {
@@ -22,8 +65,20 @@ export async function summarize(chatHistory) {
       content: SUMMARIZE_CONTEXT,
     },
     {
+      role: "system",
+      content: `
+        ===============================
+
+        Chat History:
+        ${chatHistory}
+
+        ===============================
+      `,
+    },
+    {
       role: "user",
-      content: chatHistory,
+      content:
+        "Hi there!  I hear you are a Hiring Manger with design needs.  Tell me about them!",
     },
   ];
   const response = await openai.chat.completions.create({
@@ -32,10 +87,8 @@ export async function summarize(chatHistory) {
     messages,
   });
 
-  const gptMessage = response.choices[0].message.content;
-  const summary = JSON.parse(gptMessage);
-
-  return summary;
+  const gptMessage = response.choices[0];
+  return gptMessage.message.content;
 }
 
 export async function parse(chatHistory) {
@@ -51,7 +104,7 @@ export async function parse(chatHistory) {
   ];
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo-0613",
-    temperature: 0,
+    temperature: 0.1,
     messages,
   });
 
@@ -70,6 +123,34 @@ export async function parse(chatHistory) {
   return keywords;
 }
 
+//
+// ACTION:
+// ASK A FOLLOWUP QUESTION
+//
+export async function followup(summary) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: FOLLOWUP_CONTEXT,
+      },
+      {
+        role: "user",
+        content: summary,
+      },
+    ],
+  });
+
+  const gptMessage = response.choices[0];
+  return gptMessage;
+}
+
+//
+// ACTION:
+// GET POSSIBLE MATCHES
+//
 export async function match(keywords, summary) {
   const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
   const searchUrl = `https://search.meaningfulgigs.com?${params}`;
@@ -101,25 +182,34 @@ export async function match(keywords, summary) {
     content: JSON.stringify(matchProfiles),
   });
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4-0613",
-    temperature: 0.5,
-    messages: [
-      {
-        role: "system",
-        content: EXPLAIN_CONTEXT,
-      },
-      {
-        role: "user",
-        content: `Creative Profiles (formatted as JSON):\n\
-                    ${JSON.stringify(matchProfiles)}\n\n\
-                    Summary:\n\
-                    ${summary}`,
-      },
-    ],
-  });
+  const responses = await Promise.all(
+    matchProfiles.map((profile) => {
+      return openai.chat.completions.create({
+        model: "gpt-4-0613",
+        temperature: 0.5,
+        messages: [
+          {
+            role: "system",
+            content: EXPLAIN_CONTEXT,
+          },
+          {
+            role: "user",
+            content: `
+                Creative Profile (as JSON):
+                ${JSON.stringify(profile)}
+    
+                Summary:
+                ${summary}
+            `,
+          },
+        ],
+      });
+    })
+  );
 
-  const explanations = response.choices[0].message.content;
+  const explanations = responses.map(
+    (response) => response.choices[0].message.content
+  );
   MESSAGE_HISTORY.push({
     role: "assistant",
     content: explanations,
@@ -129,4 +219,28 @@ export async function match(keywords, summary) {
     matches,
     message: explanations,
   };
+}
+
+//
+// ACTION:
+// REFOCUS THE CONVERSATION
+//
+export async function refocus(summary) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 1,
+    messages: [
+      {
+        role: "system",
+        content: REFOCUS_CONTEXT,
+      },
+      {
+        role: "user",
+        content: summary,
+      },
+    ],
+  });
+
+  const gptMessage = response.choices[0];
+  return gptMessage;
 }
