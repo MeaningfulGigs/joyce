@@ -10,7 +10,11 @@ import { match } from "../pages/api/functions";
 export default function Home() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [keywords, setKeywords] = useState([]);
+  const [keywords, setKeywords] = useState({
+    skills: [],
+    tools: [],
+    industries: [],
+  });
   const [creatives, setCreatives] = useState(null);
   const [debug, setDebug] = useState([]);
   const [summary, setSummary] = useState("");
@@ -117,30 +121,60 @@ export default function Home() {
           <a onClick={toggleDebug}>Magic Matches v0.9.0</a>
         </div>
       </div>
-
-      <div id="debug" className={styles.debugcontainer}>
-        {summary && keywords && (
-          <>
-            <div id="summaries" className={styles.summaries}>
-              <h6>SUMMARY & KEYWORDS</h6>
-              <h5>{summary}</h5>
-              <p>{keywords.toString().replaceAll(",", ", ")}</p>
-            </div>
-            <div className={styles.debug}>
-              <div className={styles.debugheader}>
-                <h6>MODEL LOG</h6>
-              </div>
-              <div className={styles.debuglogs}>
-                {debug.map((log) => (
-                  <h6>{log}</h6>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
       <div className={styles.container}>
+        <div id="debug" className={styles.debugcontainer}>
+          <div id="summaries" className={styles.debug}>
+            <div className={styles.debugheader}>
+              <h6>SUMMARY</h6>
+            </div>
+            <h5>{summary}</h5>
+          </div>
+          <div className={styles.debug}>
+            <div className={styles.debugheader}>
+              <h6>KEYWORDS</h6>
+            </div>
+            <h5>Skills:</h5>
+            {keywords.skills.map((s) => (
+              <div className={styles.tooltip}>
+                {s.name}
+                {", "}&nbsp;
+                <span class={styles.tooltiptext}>{s.explain}</span>
+              </div>
+            ))}
+            <h5>Tools:</h5>
+            {keywords.tools.map((t) => (
+              <div className={styles.tooltip}>
+                {t.name}
+                {","}&nbsp;
+                <span class={styles.tooltiptext}>{t.explain}</span>
+              </div>
+            ))}
+            <h5>Industries:</h5>
+            {keywords.industries.map((i) => (
+              <div className={styles.tooltip}>
+                {i.name}
+                {", "}&nbsp;
+                <span class={styles.tooltiptext}>{i.explain}</span>
+              </div>
+            ))}
+          </div>
+          <div className={styles.debug}>
+            <div className={styles.debugheader}>
+              <h6>MODEL LOG</h6>
+            </div>
+            <div className={styles.debuglogs}>
+              {debug.map((log) => (
+                <h6>{log}</h6>
+              ))}
+            </div>
+          </div>
+          <div className={styles.debug}>
+            <div className={styles.debugheader}>
+              <h6>AGENTS</h6>
+            </div>
+          </div>
+        </div>
+
         <div className={styles.matches}>
           {creatives &&
             creatives.map((match) => {

@@ -7,8 +7,8 @@ import {
   EXPLAIN_CONTEXT,
   REFOCUS_CONTEXT,
   GPT_FUNCTIONS,
-  TAXONOMY,
   FOLLOWUP_CONTEXT,
+  FOLLOWUP_EXAMPLES,
 } from "../../constants";
 import { CREATIVE_DATA } from "../../creative_data";
 
@@ -31,12 +31,8 @@ export async function orchestrate(summary) {
       {
         role: "system",
         content: `
-            ===============================
-
-            Summary:
-            ${summary},
-
-            ===============================
+          Summary:
+          ${summary}
         `,
       },
     ],
@@ -67,12 +63,8 @@ export async function summarize(chatHistory) {
     {
       role: "system",
       content: `
-        ===============================
-
         Chat History:
         ${chatHistory}
-
-        ===============================
       `,
     },
     {
@@ -91,36 +83,40 @@ export async function summarize(chatHistory) {
   return gptMessage.message.content;
 }
 
-export async function parse(chatHistory) {
+export async function parse(chatHistory, keywordList) {
   const messages = [
     {
       role: "system",
       content: PARSE_CONTEXT,
     },
     {
+      role: "system",
+      content: `
+        <KeywordList>
+        ${keywordList}
+        </KeywordList>
+      `,
+    },
+    {
       role: "user",
-      content: JSON.stringify(chatHistory),
+      content: `
+        <ChatHistory>
+        ${chatHistory}
+        </ChatHistory>
+      `,
     },
   ];
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo-0613",
-    temperature: 0.1,
+    temperature: 0,
     messages,
   });
 
   const gptMessage = response.choices[0];
   let keywords = JSON.parse(gptMessage.message.content).keywords;
-  keywords = [
-    ...new Set(
-      TAXONOMY.map((term) => {
-        if (keywords.includes(term) || keywords.includes(term.toLowerCase())) {
-          return term;
-        }
-      }).filter(Boolean)
-    ),
-  ];
-
-  return keywords;
+  const keywordArray = keywordList.split(", ");
+  const cleanKeywords = keywords.filter((kw) => keywordArray.includes(kw.name));
+  return cleanKeywords;
 }
 
 //
@@ -134,11 +130,20 @@ export async function followup(summary) {
     messages: [
       {
         role: "system",
-        content: FOLLOWUP_CONTEXT,
+        content: `
+          ${FOLLOWUP_CONTEXT}
+
+          ${FOLLOWUP_EXAMPLES}
+        `,
       },
       {
         role: "user",
-        content: summary,
+        content: `
+          Summary:
+          ${summary}
+
+          AI:
+        `,
       },
     ],
   });
@@ -152,7 +157,7 @@ export async function followup(summary) {
 // GET POSSIBLE MATCHES
 //
 export async function match(keywords, summary) {
-  const params = new URLSearchParams(keywords.map((kw) => ["st", kw]));
+  const params = new URLSearchParams(keywords.skills.map((kw) => ["st", kw]));
   const searchUrl = `https://search.meaningfulgigs.com?${params}`;
   const matchResponse = await fetch(searchUrl, {
     method: "GET",
@@ -236,7 +241,12 @@ export async function refocus(summary) {
       },
       {
         role: "user",
-        content: summary,
+        content: `
+          Summary:
+          ${summary}
+
+          AI:
+        `,
       },
     ],
   });

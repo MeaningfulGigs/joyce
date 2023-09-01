@@ -1,6 +1,11 @@
-const TAXONOMY_CONTEXT =
-  "Visual Website Design, Visual App Design, Product Design, Dashboards, Sitemaps, Prototypes, Prototyping, User Research, Personas, User Journeys, User Flows, Wireframes, 3D UI Renderings, CAD Drawings, UI/UX Design Systems, Migration, Landing Pages, Web & App Integrations, Web & App Reskin, E-commerce, UI/UX Copywriting, UI Design, UX Design, Web Design, Usability Testing, Information Architecture, Mobile UI, Mobile UX, Responsive Design, High Fidelity Wireframes, 3D Design, Web UI, Visual Identity, Naming, Brand Guidelines, Package Design, Label Design, Typography, Event Design, Customer Experiences, Point of Purchase, Marketing Collateral, Concepting, Art Direction, Social Media Campaigns, Social Content, Digital Content, Copywriting, Storytelling, Brand Strategy, Social Media Strategy, Content Calendar, Banner Ads, Brand Design, Creative Direction, Ad Campaigns, Creative Strategy, Photo Retouching, Video Scripts, Signage, Newsletters, Flyers, Vehicle Wraps, Email Templates, Corporate Identity Design, Brand Collateral, Brand Design Systems, Illustration, Deck Design, Presentation Design, Instruction Manuals, 2D Illustration, 3D Illustration, Portraits, Character Design, Posters, Mural, Infographics, Graphics, Lettering, Icons, Print Design, Editorial Design, Layout Design, Report Design, Logo Design, Graphic Design, Concept Art, Visual Development Art, Comic Books, Storyboards, Book Design, Magazine Design, Newspaper Design, Catalog Design, Leaflet Design, Brochure Design, Cover Design, E-book Design, Annual Report Design, Character Development , Postcard Design, PowerPoint Design, Menu Design, Stationary Design, 2D Motion Graphics, 3D Motion Graphics, Animation, Video Editing, VFX, Data Visualization, Animated Character Development, 3D Modeling, 3D Rendering, 3D Animation, 2D Animation, Social Media Filters, Motion Design, GIFs";
-const TAXONOMY = TAXONOMY_CONTEXT.split(", ");
+const SKILLS =
+  "User Personas, User Research, Low-Fidelity Wireframes, Interactive Prototypes, User Journeys, Information Architecture, Interaction Design Specifications, UX & Usability Testing, UX Copywriting, Design Handoff Documentation, UX Design Presentations, UX Rapid Prototyping, Design Systems, Style Guides, Visual Assets, High-Fidelity Wireframes, Accessibility Design, UI Animation, Responsive & Adaptive Design, UI 3D Rendering, Mobile App, Dashboards, Brand Identity Design, Brand Typography, Copywriting, Email Templates, Websites, Social Media Content, Digital Ad Campaigns, Brand & Marketing Collateral, Environmental Design, Product Packaging, Brand Visual Strategy & Guidelines, Brand Content Strategy & Guidelines, Brand Audit Reports & Presentations, Social Media Visual Strategy, Brand Research, Brand Competition Audit , Layout & Publication Design, Concept Design, Character Design, Industrial Design, Packaging & Label Design , 3D Rendering for Products and Spaces, Data Visualization, Typography & Lettering, Apparel Design, Photo Retouching & Editing, Storyboards, Mixed Media Design, 3D Illustration, 2D Illustration, Editorial Illustrations, Educational Illustrations, Technical Illustrations, Fashion Illustrations, 2D Animation, 2D Motion Graphics, 3D Animation, 3D Motion Graphics, 3D Modeling, Rigging, Stop Motion Animation, Character Development, Animated Banners, Animated Data Visualization, Social Media Filters, Motion Design, Immersive Technologies, Video Editing, Video Scripts, Videography, Visual Effects (VFX), Promotional Videos, Instructional Videos";
+
+const TOOLS =
+  "3D Studio Max, Abstract, Adobe After Effects, Adobe Animate, Adobe Audition, Adobe Illustrator, Adobe InDesign, Adobe Lightroom, Adobe Photoshop, Adobe Premiere, Adobe Premiere Pro, Adobe Substance Painter, Adobe XD, AutoCAD, Autodesk Flame, Avid, Balsamiq, Blender, Canva, Capture One Pro, Cinema 4D, CSS, CSS 3, DaVinci Resolve, Draw.io, Figma, Final Cut Pro, Framer, Google Docs, Google Slides, HTML, InDesign, InVision, iOS, Keynote, Knockout, Lottie, Marvel, Maya, Microsoft PowerPoint, Microsoft Word, Nuke, Origami Studio, PowerPoint, Principle, Procreate, Proto.io, Sketch, SketchUp, SmartDraw, Spark AR, Tableau, Toonboom, TurboCAD, TV Paint, Unreal Engine, Vray, Webflow, Wordpress, ZBrush, Zeplin";
+
+const INDUSTRIES =
+  "Agriculture, Augmented, Virtual and Mixed Reality, Automotive, B2B, Banking and Finance, Beauty, Cannabis, Consumer Electronics, Cryptocurrency, Education, Energy, Fashion, Food and Beverage, Gaming, Government, Health and Fitness, Healthcare, Hotel, Insurance, Legal, Music and Entertainment, Nonprofit, Packaged Goods, Real Estate, Restaurant, Retail, Software, Sports, Startup, Telecommunications, Tobacco, Transportation, Travel and Leisure, Wine, Beer and Spirits";
 
 const SUMMARIZE_CONTEXT = `
   You will be given a Chat History between a hiring manager and an AI.
@@ -12,15 +17,15 @@ const SUMMARIZE_CONTEXT = `
 `;
 
 const PARSE_CONTEXT = `
-  You will be presented with a conversation between a user and an AI.
-  Your job is to provide a set of relevant tags from a list you are given.
-
-  There are two rules you MUST follow when choosing the tags:
-  (1) They MUST come from this list and spelled identically: ${TAXONOMY_CONTEXT}
-  (2) They MUST be relevant to the needs of the user in the conversation
-
-  Provide your answer as JSON in the following format:
-  {"keywords": [{tag1}, {tag2}, ...]}
+  <Instructions>
+  You will be provided with a Keyword List, and a Chat History between a Hiring Manager and an AI.
+  Your job is to select keywords from the Keyword List that are relevant to the Hiring Manager's needs in the Chat History.
+  Don't select keywords that are not in the Keyword List!  If no keywords in the Keyword List are relevant, respond with an empty array.
+  
+  Step 1 - Select keywords from the Keyword List.  They MUST be spelled EXACTLY as in the Keyword List.
+  Step 2 - For each selected keyword, write a one-sentence explanation of why you selected it.
+  Step 3 - Provide your answer as JSON in the following format: {"keywords": [{"name": <KEYWORD_NAME>, "explain": <SELECTION_EXPLANATION>}, ...]}
+  </Instructions>
 `;
 
 const SYSTEM_CONTEXT = `
@@ -66,7 +71,7 @@ const FOLLOWUP_CONTEXT = `
   You will be given a summary of a conversation between a Hiring Manager and an AI.
   Your job is to collect more information about the needs of the Hiring Manager.
 
-  You know they are trying to hire a Creative professional for a position they nave open.
+  You know they are trying to hire a Creative professional for a position they have open.
   In order to match them with your team of Creatives, you need to know more from the Hiring Manager.
   For instance, you can ask about specific skills, tools, or industries that they are interested in.
 
@@ -74,10 +79,20 @@ const FOLLOWUP_CONTEXT = `
   Everyone on your team meets those requirements. But you need more information to make a high-quality match.
 `;
 
+const FOLLOWUP_EXAMPLES = `
+  Example 1:
+  Absolutely, we have folks that can help.  Can you provide some more context on what this is for?
+  
+  Example 2:
+  Got it - what kind of motion work are you looking for?  Are you looking to bring life to static assets - like a title sequence movie a 2 minute explainer video?
+
+  Example 3:
+  OK, I can already think of a few Creatives who might be a good fit.  Is this pitch work? Or are you looking for stuff that will live in an informational brochure?
+`;
+
 const REFOCUS_CONTEXT = `
   You will be given a summary of a conversation between a Hiring Manager and an AI.
-  The conversation has gotten off the topic of hiring creative professionals.
-  Your job is to bring the conversation back to that topic.
+  Your job is to steer the conversation to the topic of hiring creative professionals.
 `;
 
 const SEEN_CREATIVES = new Set();
@@ -157,12 +172,15 @@ const GPT_FUNCTIONS = [
 ];
 
 export {
-  TAXONOMY,
+  SKILLS,
+  TOOLS,
+  INDUSTRIES,
   INITIAL_MESSAGE,
   SUMMARIZE_CONTEXT,
   PARSE_CONTEXT,
   ORCHESTRATE_CONTEXT,
   FOLLOWUP_CONTEXT,
+  FOLLOWUP_EXAMPLES,
   EXPLAIN_CONTEXT,
   REFOCUS_CONTEXT,
   GPT_FUNCTIONS,

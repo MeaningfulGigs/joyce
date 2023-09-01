@@ -7,13 +7,9 @@ import {
   refocus,
 } from "./functions";
 
-import OpenAI from "openai";
-import MessageHistory from "./history";
+import { SKILLS, TOOLS, INDUSTRIES } from "../../constants";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
+import MessageHistory from "./history";
 
 const msgHistory = new MessageHistory();
 
@@ -21,20 +17,19 @@ const msgHistory = new MessageHistory();
 export async function chat(userInput) {
   // add user input to message history
   msgHistory.add("user", userInput);
-  console.log(msgHistory.pretty());
 
   // generate a summary of the chat history
   // and extract taxonomy keywords from it
   const responses = await Promise.all([
     summarize(msgHistory.pretty()),
-    parse(msgHistory.chat),
+    parse(msgHistory.pretty(), SKILLS),
+    parse(msgHistory.pretty(), TOOLS),
+    parse(msgHistory.pretty(), INDUSTRIES),
   ]);
-  const [summary, keywords] = responses;
+  const [summary, skills, tools, industries] = responses;
+  const keywords = { skills, tools, industries };
 
-  const summaryMessage = `
-    Summary:
-    ${summary}
-  `;
+  const summaryMessage = summary === "N/A" ? msgHistory.pretty() : summary;
 
   // call the Orchestrate-Agent
   let response = await orchestrate(summaryMessage);
@@ -49,6 +44,7 @@ export async function chat(userInput) {
   } else if (fxnName === "ask_followup") {
     response = await followup(summaryMessage);
   }
+  msgHistory.add("assistant", response.message.content);
 
   return {
     message: response.message,
