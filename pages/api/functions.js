@@ -1,7 +1,9 @@
 import {
+  SKILL_MAP,
   MESSAGE_HISTORY,
   SEEN_CREATIVES,
   ORCHESTRATE_CONTEXT,
+  SPECIALTY_CONTEXT,
   PARSE_CONTEXT,
   SUMMARIZE_CONTEXT,
   EXPLAIN_CONTEXT,
@@ -10,6 +12,7 @@ import {
   FOLLOWUP_CONTEXT,
   FOLLOWUP_EXAMPLES,
 } from "../../constants";
+
 import { CREATIVE_DATA } from "../../creative_data";
 
 import OpenAI from "openai";
@@ -21,7 +24,7 @@ const openai = new OpenAI({
 
 export async function orchestrate(summary) {
   const response = await openai.chat.completions.create({
-    model: "gpt-4-0613",
+    model: "gpt-3.5-turbo-0613",
     temperature: 0,
     messages: [
       {
@@ -45,7 +48,6 @@ export async function orchestrate(summary) {
     const content = gptMessage.message.content;
     if (content.startsWith("functions")) {
       const fxnName = content.replace("functions.", "").replace("()", "");
-      console.log(`OH SHIT: ${fxnName}`);
       return {
         message: { function_call: { name: fxnName, arguments: [] } },
       };
@@ -70,7 +72,7 @@ export async function summarize(chatHistory) {
     {
       role: "user",
       content:
-        "Hi there!  I hear you are a Hiring Manger with design needs.  Tell me about them!",
+        "Hi there!  I hear you're a Hiring Manger with design needs.  Tell me about them!",
     },
   ];
   const response = await openai.chat.completions.create({
@@ -81,6 +83,54 @@ export async function summarize(chatHistory) {
 
   const gptMessage = response.choices[0];
   return gptMessage.message.content;
+}
+
+export async function parseSkills(chatHistory) {
+  const specialtyList = Object.keys(SKILL_MAP);
+  let messages = [
+    {
+      role: "system",
+      content: SPECIALTY_CONTEXT,
+    },
+    {
+      role: "system",
+      content: `
+        <DesignSpecialties>
+        ${specialtyList.toString().replace(",", "\n")}
+        </DesignSpecialties>
+      `,
+    },
+    {
+      role: "user",
+      content: `
+        <ChatHistory>
+        ${chatHistory}
+        </ChatHistory>
+      `,
+    },
+  ];
+
+  let response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 0,
+    messages,
+  });
+
+  const gptMessage = response.choices[0];
+  const gptSpecialties = JSON.parse(gptMessage.message.content).specialties;
+  const specialties = gptSpecialties.filter((s) =>
+    specialtyList.includes(s.name)
+  );
+
+  const skillsList = specialties.flatMap(
+    (specialty) => SKILL_MAP[specialty.name]
+  );
+  const skills = await parse(chatHistory, skillsList.toString());
+
+  return {
+    specialties,
+    skills,
+  };
 }
 
 export async function parse(chatHistory, keywordList) {
@@ -106,6 +156,7 @@ export async function parse(chatHistory, keywordList) {
       `,
     },
   ];
+
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo-0613",
     temperature: 0,
@@ -114,8 +165,9 @@ export async function parse(chatHistory, keywordList) {
 
   const gptMessage = response.choices[0];
   let keywords = JSON.parse(gptMessage.message.content).keywords;
-  const keywordArray = keywordList.split(", ");
+  const keywordArray = keywordList.split(",").map((kw) => kw.trim());
   const cleanKeywords = keywords.filter((kw) => keywordArray.includes(kw.name));
+
   return cleanKeywords;
 }
 

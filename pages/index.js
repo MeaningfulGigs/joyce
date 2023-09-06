@@ -11,6 +11,7 @@ export default function Home() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [keywords, setKeywords] = useState({
+    specialties: [],
     skills: [],
     tools: [],
     industries: [],
@@ -133,6 +134,14 @@ export default function Home() {
             <div className={styles.debugheader}>
               <h6>KEYWORDS</h6>
             </div>
+            <h5>Specialties:</h5>
+            {keywords.specialties.map((s) => (
+              <div className={styles.tooltip}>
+                {s.name}
+                {", "}&nbsp;
+                <span class={styles.tooltiptext}>{s.explain}</span>
+              </div>
+            ))}
             <h5>Skills:</h5>
             {keywords.skills.map((s) => (
               <div className={styles.tooltip}>

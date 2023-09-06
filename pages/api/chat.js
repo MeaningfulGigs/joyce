@@ -2,6 +2,7 @@ import {
   orchestrate,
   summarize,
   parse,
+  parseSkills,
   followup,
   match,
   refocus,
@@ -22,12 +23,12 @@ export async function chat(userInput) {
   // and extract taxonomy keywords from it
   const responses = await Promise.all([
     summarize(msgHistory.pretty()),
-    parse(msgHistory.pretty(), SKILLS),
+    parseSkills(msgHistory.pretty()),
     parse(msgHistory.pretty(), TOOLS),
     parse(msgHistory.pretty(), INDUSTRIES),
   ]);
-  const [summary, skills, tools, industries] = responses;
-  const keywords = { skills, tools, industries };
+  const [summary, { specialties, skills }, tools, industries] = responses;
+  const keywords = { specialties, skills, tools, industries };
 
   const summaryMessage = summary === "N/A" ? msgHistory.pretty() : summary;
 

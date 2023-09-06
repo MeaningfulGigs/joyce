@@ -1,3 +1,90 @@
+const SKILL_MAP = {
+  "UX / UI Product Design": [
+    "User Personas",
+    "User Research",
+    "Low-Fidelity Wireframes",
+    "Interactive Prototypes",
+    "User Journeys",
+    "Information Architecture",
+    "Interaction Design Specifications",
+    "UX & Usability Testing",
+    "UX Copywriting",
+    "Design Handoff Documentation",
+    "UX Design Presentations",
+    "UX Rapid Prototyping",
+    "Design Systems",
+    "Style Guides",
+    "Visual Assets",
+    "High-Fidelity Wireframes",
+    "Accessibility Design",
+    "UI Animation",
+    "Responsive & Adaptive Design",
+    "UI 3D Rendering",
+    "Mobile App",
+    "Dashboards",
+  ],
+  "Brand & Marketing Design": [
+    "Brand Identity Design",
+    "Brand Typography",
+    "Copywriting",
+    "Email Templates",
+    "Websites",
+    "Social Media Content",
+    "Digital Ad Campaigns",
+    "Brand & Marketing Collateral",
+    "Environmental Design",
+    "Product Packaging",
+    "Brand Visual Strategy & Guidelines",
+    "Brand Content Strategy & Guidelines",
+    "Brand Audit Reports & Presentations",
+    "Social Media Visual Strategy",
+    "Brand Research",
+    "Brand Competition Audit",
+  ],
+  "Illustration, Graphic & Visual Storytelling": [
+    "Layout & Publication Design",
+    "Concept Design",
+    "Character Design",
+    "Industrial Design",
+    "Packaging & Label Design ",
+    "3D Rendering for Products and Spaces",
+    "Data Visualization",
+    "Typography & Lettering",
+    "Apparel Design",
+    "Photo Retouching & Editing",
+    "Storyboards",
+    "Mixed Media Design",
+    "3D Illustration",
+    "2D Illustration",
+    "Editorial Illustrations",
+    "Educational Illustrations",
+    "Technical Illustrations",
+    "Fashion Illustrations",
+  ],
+  "Motion, Video & Animation": [
+    "2D Animation",
+    "2D Motion Graphics",
+    "3D Animation",
+    "3D Motion Graphics",
+    "3D Modeling",
+    "Rigging",
+    "Stop Motion Animation",
+    "Character Development",
+    "Animated Banners ",
+    "Animated Data Visualization",
+    "Social Media Filters",
+    "Motion Design",
+    "Immersive Technologies",
+    "",
+    "Video Editing",
+    "Video Scripts",
+    "Videography",
+    "Visual Effects (VFX)",
+    "Promotional Videos",
+    "Instructional Videos",
+  ],
+};
+
 const SKILLS =
   "User Personas, User Research, Low-Fidelity Wireframes, Interactive Prototypes, User Journeys, Information Architecture, Interaction Design Specifications, UX & Usability Testing, UX Copywriting, Design Handoff Documentation, UX Design Presentations, UX Rapid Prototyping, Design Systems, Style Guides, Visual Assets, High-Fidelity Wireframes, Accessibility Design, UI Animation, Responsive & Adaptive Design, UI 3D Rendering, Mobile App, Dashboards, Brand Identity Design, Brand Typography, Copywriting, Email Templates, Websites, Social Media Content, Digital Ad Campaigns, Brand & Marketing Collateral, Environmental Design, Product Packaging, Brand Visual Strategy & Guidelines, Brand Content Strategy & Guidelines, Brand Audit Reports & Presentations, Social Media Visual Strategy, Brand Research, Brand Competition Audit , Layout & Publication Design, Concept Design, Character Design, Industrial Design, Packaging & Label Design , 3D Rendering for Products and Spaces, Data Visualization, Typography & Lettering, Apparel Design, Photo Retouching & Editing, Storyboards, Mixed Media Design, 3D Illustration, 2D Illustration, Editorial Illustrations, Educational Illustrations, Technical Illustrations, Fashion Illustrations, 2D Animation, 2D Motion Graphics, 3D Animation, 3D Motion Graphics, 3D Modeling, Rigging, Stop Motion Animation, Character Development, Animated Banners, Animated Data Visualization, Social Media Filters, Motion Design, Immersive Technologies, Video Editing, Video Scripts, Videography, Visual Effects (VFX), Promotional Videos, Instructional Videos";
 
@@ -16,11 +103,23 @@ const SUMMARIZE_CONTEXT = `
   Don't make anything up. If you don't know enough to summarize, write "N/A"
 `;
 
+const SPECIALTY_CONTEXT = `
+  <Instructions>
+  You will be provided with a list of Design Specialties, and a Chat History between a Hiring Manager and an AI.
+  Your job is to select up to two Design Specialties from the list that are highly-relevant to the Hiring Manager's needs.
+  Don't select words that are not in the Design Specialties list!  If none of the Design Specialties are relevant, respond with an empty array.
+
+  Step 1 - Select relevant Design Specialties.  They must be spelled EXACTLY as in the list.
+  Step 2 - For each selected Design Specialty, write a one-sentence explanation of why you selected it.
+  Step 3 - Provide your answer as JSON in the following format: {"specialties": [{"name": <SPECIALTY_NAME>, "explain": <SELECTION_EXPLANATION>}, ...]}
+  </Instructions>
+`;
+
 const PARSE_CONTEXT = `
   <Instructions>
   You will be provided with a Keyword List, and a Chat History between a Hiring Manager and an AI.
   Your job is to select keywords from the Keyword List that are relevant to the Hiring Manager's needs in the Chat History.
-  Don't select keywords that are not in the Keyword List!  If no keywords in the Keyword List are relevant, respond with an empty array.
+  If no keywords in the Keyword List are relevant, don't make any up!!  Simply respond with an empty array.
   
   Step 1 - Select keywords from the Keyword List.  They MUST be spelled EXACTLY as in the Keyword List.
   Step 2 - For each selected keyword, write a one-sentence explanation of why you selected it.
@@ -98,25 +197,25 @@ const REFOCUS_CONTEXT = `
 const SEEN_CREATIVES = new Set();
 
 const GPT_FUNCTIONS = [
-  {
-    name: "get_creative_matches",
-    description:
-      "Finds relevant Creatives from a database given an array of at least three tags.  The more tags that are supplied, the more relevant the results.",
-    parameters: {
-      type: "object",
-      properties: {
-        tags: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description:
-            "A set of design-related tags collected from the conversation with the user.  At least three tags are required.",
-        },
-      },
-      required: ["tags"],
-    },
-  },
+  // {
+  //   name: "get_creative_matches",
+  //   description:
+  //     "Finds relevant Creatives from a database given an array of at least three tags.  The more tags that are supplied, the more relevant the results.",
+  //   parameters: {
+  //     type: "object",
+  //     properties: {
+  //       tags: {
+  //         type: "array",
+  //         items: {
+  //           type: "string",
+  //         },
+  //         description:
+  //           "A set of design-related tags collected from the conversation with the user.  At least three tags are required.",
+  //       },
+  //     },
+  //     required: ["tags"],
+  //   },
+  // },
   {
     name: "get_creative_detail",
     description:
@@ -173,10 +272,12 @@ const GPT_FUNCTIONS = [
 
 export {
   SKILLS,
+  SKILL_MAP,
   TOOLS,
   INDUSTRIES,
   INITIAL_MESSAGE,
   SUMMARIZE_CONTEXT,
+  SPECIALTY_CONTEXT,
   PARSE_CONTEXT,
   ORCHESTRATE_CONTEXT,
   FOLLOWUP_CONTEXT,
