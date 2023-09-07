@@ -135,41 +135,54 @@ export default function Home() {
               <h6>KEYWORDS</h6>
             </div>
             <h5>Specialties:</h5>
-            {keywords.specialties.map((s) => (
-              <div className={styles.tooltip}>
-                {s.name}
-                {", "}&nbsp;
-                <span class={styles.tooltiptext}>{s.explain}</span>
-              </div>
-            ))}
+            <div className={styles.debugSection}>
+              {keywords.specialties.map((s) => (
+                <>
+                  <div className={styles.tooltip}>
+                    {s.name}
+                    <span class={styles.tooltiptext}>{s.explain}</span>
+                  </div>
+                  <br />
+                </>
+              ))}
+            </div>
             <h5>Skills:</h5>
-            {keywords.skills.map((s) => (
-              <div className={styles.tooltip}>
-                {s.name}
-                {", "}&nbsp;
-                <span class={styles.tooltiptext}>{s.explain}</span>
-              </div>
-            ))}
+            <div className={styles.debugSection}>
+              {keywords.skills.map((s) => (
+                <>
+                  <div className={styles.tooltip}>
+                    {s.name}
+                    <span class={styles.tooltiptext}>{s.explain}</span>
+                  </div>
+                  <br />
+                </>
+              ))}
+            </div>
             <h5>Tools:</h5>
-            {keywords.tools.map((t) => (
-              <div className={styles.tooltip}>
-                {t.name}
-                {","}&nbsp;
-                <span class={styles.tooltiptext}>{t.explain}</span>
-              </div>
-            ))}
+            <div className={styles.debugSection}>
+              {keywords.tools.map((t) => (
+                <>
+                  <div className={styles.tooltip}>
+                    {t.name}
+                    <span class={styles.tooltiptext}>{t.explain}</span>
+                  </div>
+                  <br />
+                </>
+              ))}
+            </div>
             <h5>Industries:</h5>
-            {keywords.industries.map((i) => (
-              <div className={styles.tooltip}>
-                {i.name}
-                {", "}&nbsp;
-                <span class={styles.tooltiptext}>{i.explain}</span>
-              </div>
-            ))}
+            <div className={styles.debugSection}>
+              {keywords.industries.map((i) => (
+                <div className={styles.tooltip}>
+                  {i.name}
+                  <span class={styles.tooltiptext}>{i.explain}</span>
+                </div>
+              ))}
+            </div>
           </div>
           <div className={styles.debug}>
             <div className={styles.debugheader}>
-              <h6>MODEL LOG</h6>
+              <h6>ORCHESTRATION LOG</h6>
             </div>
             <div className={styles.debuglogs}>
               {debug.map((log) => (
@@ -183,48 +196,47 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        <div className={styles.matches}>
-          {creatives &&
-            creatives.map((match) => {
-              return (
-                <div
-                  className={styles.match}
-                  onClick={() =>
-                    window.open(
-                      `https://showcase.meaningfulgigs.com/portfolios/${match._id}`,
-                      "_blank"
-                    )
-                  }
-                >
-                  <div>
-                    <img
-                      src={`https://assets.meaningfulgigs.com/${match.hero.source}`}
-                      className={styles.hero}
-                    />
-                  </div>
-                  <div className={styles.creativematch}>
-                    <img
-                      src={`https://assets.meaningfulgigs.com/${match.avatar}`}
-                      className={styles.avatar}
-                    />
-                    <div className={styles.creativedata}>
-                      <h3>{match.name}</h3>
-                      <div>
-                        {match.specialties[0].replace("Design", "")}
-                        <br />
-                        {match.specialties[1] &&
-                          match.specialties[1].replace("Design", "")}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-        </div>
-        <main className={styles.main}>
+        <div className={styles.main}>
           <div className={styles.cloud}>
             <div ref={messageListRef} className={styles.messagelist}>
+              <div className={styles.matches}>
+                {creatives &&
+                  creatives.map((match) => {
+                    return (
+                      <div
+                        className={styles.match}
+                        onClick={() =>
+                          window.open(
+                            `https://showcase.meaningfulgigs.com/portfolios/${match._id}`,
+                            "_blank"
+                          )
+                        }
+                      >
+                        <div>
+                          <img
+                            src={`https://assets.meaningfulgigs.com/${match.hero.source}`}
+                            className={styles.hero}
+                          />
+                        </div>
+                        <div className={styles.creativematch}>
+                          <img
+                            src={`https://assets.meaningfulgigs.com/${match.avatar}`}
+                            className={styles.avatar}
+                          />
+                          <div className={styles.creativedata}>
+                            <h3>{match.name}</h3>
+                            <div>
+                              {match.specialties[0].replace("Design", "")}
+                              <br />
+                              {match.specialties[1] &&
+                                match.specialties[1].replace("Design", "")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
               {messages.map((message, index) => {
                 return (
                   // The latest message sent by the user will be animated while waiting for a response
@@ -320,7 +332,7 @@ export default function Home() {
               </form>
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </>
   );

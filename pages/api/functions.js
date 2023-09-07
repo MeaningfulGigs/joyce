@@ -24,7 +24,7 @@ const openai = new OpenAI({
 
 export async function orchestrate(summary) {
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-0613",
+    model: "gpt-4-0613",
     temperature: 0,
     messages: [
       {
@@ -63,16 +63,12 @@ export async function summarize(chatHistory) {
       content: SUMMARIZE_CONTEXT,
     },
     {
-      role: "system",
-      content: `
-        Chat History:
-        ${chatHistory}
-      `,
-    },
-    {
       role: "user",
-      content:
-        "Hi there!  I hear you're a Hiring Manger with design needs.  Tell me about them!",
+      content: `
+        <ChatHistory>
+        ${chatHistory}
+        </ChatHistory>
+      `,
     },
   ];
   const response = await openai.chat.completions.create({
@@ -177,8 +173,10 @@ export async function parse(chatHistory, keywordList) {
 //
 export async function followup(summary) {
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-0613",
-    temperature: 0,
+    model: "gpt-4-0613",
+    temperature: 0.2,
+    presence_penalty: 0.5,
+    frequency_penalty: 0.5,
     messages: [
       {
         role: "system",
@@ -242,7 +240,7 @@ export async function match(keywords, summary) {
   const responses = await Promise.all(
     matchProfiles.map((profile) => {
       return openai.chat.completions.create({
-        model: "gpt-4-0613",
+        model: "gpt-3.5-turbo-0613",
         temperature: 0.5,
         messages: [
           {

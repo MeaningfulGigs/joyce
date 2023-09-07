@@ -95,12 +95,12 @@ const INDUSTRIES =
   "Agriculture, Augmented, Virtual and Mixed Reality, Automotive, B2B, Banking and Finance, Beauty, Cannabis, Consumer Electronics, Cryptocurrency, Education, Energy, Fashion, Food and Beverage, Gaming, Government, Health and Fitness, Healthcare, Hotel, Insurance, Legal, Music and Entertainment, Nonprofit, Packaged Goods, Real Estate, Restaurant, Retail, Software, Sports, Startup, Telecommunications, Tobacco, Transportation, Travel and Leisure, Wine, Beer and Spirits";
 
 const SUMMARIZE_CONTEXT = `
+  <Instructions>
   You will be given a Chat History between a hiring manager and an AI.
-  Your job is to summarize the Chat History from the point-of-view of the hiring manager.
-
-  Your summary should be up to a paragraph in length, and should be written as though you are the Hiring Manager.
-  You should use the first-person ("I need a designer who can...") and only use information from the Chat History.
-  Don't make anything up. If you don't know enough to summarize, write "N/A"
+  Your job is to summarize the Chat History as if you were going to provide it to an AI LLM.
+  Include all relevant information in the summary, but don't make anything up.
+  If you don't know enough to summarize, write "N/A"
+  </Instructions>
 `;
 
 const SPECIALTY_CONTEXT = `
@@ -172,7 +172,6 @@ const FOLLOWUP_CONTEXT = `
 
   You know they are trying to hire a Creative professional for a position they have open.
   In order to match them with your team of Creatives, you need to know more from the Hiring Manager.
-  For instance, you can ask about specific skills, tools, or industries that they are interested in.
 
   You can assume the Hiring Manager wants a senior-level Creative who is available immediately.
   Everyone on your team meets those requirements. But you need more information to make a high-quality match.
@@ -187,6 +186,18 @@ const FOLLOWUP_EXAMPLES = `
 
   Example 3:
   OK, I can already think of a few Creatives who might be a good fit.  Is this pitch work? Or are you looking for stuff that will live in an informational brochure?
+
+  Example 4:
+  Do you imagine this person as a bespoke craftsman who makes things from scratch?  Someone who can make things really look good, you just tell them an idea and they bring it to life.
+
+  Example 5:
+  Let me know if this sounds right: you need someone who can work really well within your guidelines and truly understand your brand.  Someone who is highly skilled at the nuance and details of brand, understands color palettes and typography, and understands the brand and how things live within it.
+
+  Example 6:
+  What type of creative personality are you looking for?  An Individual Contributor who needs minimal direction - you can give them an idea and they run with it, works really well async?  Or someone that's Highly Collaborative: embedded in your team and prefers real-time communication throughout the day?
+
+  Example 7:
+  Got it, OK I think I have everything I need.  Anything else that we missed before I send matches?
 `;
 
 const REFOCUS_CONTEXT = `
@@ -219,23 +230,14 @@ const GPT_FUNCTIONS = [
   {
     name: "get_creative_detail",
     description:
-      "Finds a specific Creative professional from a database and provides a custom profile for them based on the user's needs.",
+      "Finds a specific Creative from a database given the name of the Creative. Then provides a custom profile for the Creative based on the user's needs.",
     parameters: {
       type: "object",
       properties: {
-        name: {
+        creativeName: {
           type: "string",
           description:
             "The name of the Creative professional to look up in the database",
-        },
-        focusAreas: {
-          type: "array",
-          items: {
-            type: "string",
-            enum: ["skills", "industries", "tools"],
-          },
-          description:
-            "If provided, focus areas specify an area to go into greater detail when generating the profile.",
         },
       },
       required: ["creativeName"],
