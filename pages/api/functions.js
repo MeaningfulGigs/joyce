@@ -1,19 +1,21 @@
-import {
-  SKILL_MAP,
-  MESSAGE_HISTORY,
-  SEEN_CREATIVES,
-  ORCHESTRATE_CONTEXT,
-  SPECIALTY_CONTEXT,
-  PARSE_CONTEXT,
-  SUMMARIZE_CONTEXT,
-  EXPLAIN_CONTEXT,
-  REFOCUS_CONTEXT,
-  GPT_FUNCTIONS,
-  FOLLOWUP_CONTEXT,
-  FOLLOWUP_EXAMPLES,
-} from "../../constants";
+import { SKILL_MAP, TOOL_MAP, INDUSTRIES } from "../../constants/keywords";
 
-import { CREATIVE_DATA } from "../../creative_data";
+import {
+  ORCHESTRATE,
+  PARSE_SPECIALTY,
+  PARSE_SKILLS,
+  PARSE_TOOLS,
+  PARSE_INDUSTRIES,
+  SUMMARIZE,
+  EXPLAIN,
+  REFOCUS,
+  SPECIALTY_FOLLOWUP,
+  SKILLS_TOOLS_FOLLOWUP,
+} from "../../constants/contexts";
+
+import { GPT_FUNCTIONS } from "../../constants/gptFunctions";
+
+import { log } from "../../logger";
 
 import OpenAI from "openai";
 
@@ -22,20 +24,38 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
-export async function orchestrate(summary) {
+export async function orchestrate(summary, keywords) {
+  const specialties = keywords.specialties
+    .map((s) => `<Specialty>${s.name}</Specialty>`)
+    .join("\n");
+  const skills = keywords.skills
+    .map((s) => `<Skill>${s.name}</Skill>`)
+    .join("\n");
+  const tools = keywords.tools.map((t) => `<Tool>${t.name}</Tool>`).join("\n");
+  const industries = keywords.industries
+    .map((i) => `<Industry>${i.name}</Industry>`)
+    .join("\n");
   const response = await openai.chat.completions.create({
     model: "gpt-4-0613",
     temperature: 0,
     messages: [
       {
         role: "system",
-        content: ORCHESTRATE_CONTEXT,
+        content: ORCHESTRATE,
       },
       {
-        role: "system",
+        role: "user",
         content: `
-          Summary:
+          <Summary>
           ${summary}
+          </Summary>
+
+          <Keywords>
+          ${specialties ? specialties : "No Specialties"}
+          ${skills ? skills : "No Skills"}
+          ${tools ? tools : "No Tools"}
+          ${industries ? industries : "No Industries"}
+          </Keywords>
         `,
       },
     ],
@@ -53,6 +73,7 @@ export async function orchestrate(summary) {
       };
     }
   }
+  log("orchestrate: complete");
   return gptMessage;
 }
 
@@ -60,7 +81,7 @@ export async function summarize(chatHistory) {
   const messages = [
     {
       role: "system",
-      content: SUMMARIZE_CONTEXT,
+      content: SUMMARIZE,
     },
     {
       role: "user",
@@ -68,6 +89,8 @@ export async function summarize(chatHistory) {
         <ChatHistory>
         ${chatHistory}
         </ChatHistory>
+
+        Summary:
       `,
     },
   ];
@@ -78,35 +101,29 @@ export async function summarize(chatHistory) {
   });
 
   const gptMessage = response.choices[0];
+  log("summarize: complete");
   return gptMessage.message.content;
 }
 
-export async function parseSkills(chatHistory) {
+export async function parseSpecialties(summary) {
   const specialtyList = Object.keys(SKILL_MAP);
-  let messages = [
+  const messages = [
     {
       role: "system",
-      content: SPECIALTY_CONTEXT,
-    },
-    {
-      role: "system",
-      content: `
-        <DesignSpecialties>
-        ${specialtyList.toString().replace(",", "\n")}
-        </DesignSpecialties>
-      `,
+      content: PARSE_SPECIALTY,
     },
     {
       role: "user",
       content: `
-        <ChatHistory>
-        ${chatHistory}
-        </ChatHistory>
+        <Summary>
+        ${summary}
+        </Summary>
+
+        Answer as RFC-8259 compliant JSON:
       `,
     },
   ];
-
-  let response = await openai.chat.completions.create({
+  const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo-0613",
     temperature: 0,
     messages,
@@ -118,40 +135,91 @@ export async function parseSkills(chatHistory) {
     specialtyList.includes(s.name)
   );
 
-  const skillsList = specialties.flatMap(
-    (specialty) => SKILL_MAP[specialty.name]
-  );
-  const skills = await parse(chatHistory, skillsList.toString());
+  log("parse: complete (specialties)");
 
-  return {
-    specialties,
-    skills,
-  };
+  return specialties;
 }
 
-export async function parse(chatHistory, keywordList) {
-  const messages = [
-    {
-      role: "system",
-      content: PARSE_CONTEXT,
-    },
-    {
-      role: "system",
-      content: `
-        <KeywordList>
-        ${keywordList}
-        </KeywordList>
-      `,
-    },
-    {
-      role: "user",
-      content: `
-        <ChatHistory>
-        ${chatHistory}
-        </ChatHistory>
-      `,
-    },
-  ];
+export async function parse(chatHistory, datatype, specialties) {
+  let messages;
+  let keywordArray;
+  if (datatype == "skills") {
+    keywordArray = specialties.flatMap(
+      (specialty) => SKILL_MAP[specialty.name]
+    );
+    messages = [
+      {
+        role: "system",
+        content: PARSE_SKILLS,
+      },
+      {
+        role: "system",
+        content: `
+          <DesignSkills>
+          ${keywordArray}
+          </DesignSkills>
+        `,
+      },
+      {
+        role: "user",
+        content: `
+          <ChatHistory>
+          ${chatHistory}
+          </ChatHistory>
+        `,
+      },
+    ];
+  } else if (datatype == "tools") {
+    keywordArray = specialties.flatMap((specialty) => TOOL_MAP[specialty.name]);
+    messages = [
+      {
+        role: "system",
+        content: PARSE_TOOLS,
+      },
+      {
+        role: "system",
+        content: `
+          <DesignTools>
+          ${keywordArray}
+          </DesignTools>
+        `,
+      },
+      {
+        role: "user",
+        content: `
+          <ChatHistory>
+          ${chatHistory}
+          </ChatHistory>
+        `,
+      },
+    ];
+  } else if (datatype == "industries") {
+    keywordArray = INDUSTRIES;
+    messages = [
+      {
+        role: "system",
+        content: PARSE_INDUSTRIES,
+      },
+      {
+        role: "system",
+        content: `
+          <Industries>
+          ${keywordArray}
+          </Industries>
+        `,
+      },
+      {
+        role: "user",
+        content: `
+          <ChatHistory>
+          ${chatHistory}
+          </ChatHistory>
+        `,
+      },
+    ];
+  } else {
+    return None;
+  }
 
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo-0613",
@@ -161,8 +229,9 @@ export async function parse(chatHistory, keywordList) {
 
   const gptMessage = response.choices[0];
   let keywords = JSON.parse(gptMessage.message.content).keywords;
-  const keywordArray = keywordList.split(",").map((kw) => kw.trim());
   const cleanKeywords = keywords.filter((kw) => keywordArray.includes(kw.name));
+
+  log(`parse: complete (${datatype})`);
 
   return cleanKeywords;
 }
@@ -171,31 +240,38 @@ export async function parse(chatHistory, keywordList) {
 // ACTION:
 // ASK A FOLLOWUP QUESTION
 //
-export async function followup(summary) {
+export async function followup(chatHistory, keywords) {
+  let messages = [];
+  if (keywords.specialties.length == 0) {
+    messages.push({
+      role: "system",
+      content: `
+          ${SPECIALTY_FOLLOWUP}
+        `,
+    });
+  } else {
+    messages.push({
+      role: "system",
+      content: `
+          ${SKILLS_TOOLS_FOLLOWUP}
+        `,
+    });
+  }
+
+  messages.push({
+    role: "user",
+    content: `
+      <ChatHistory>
+      ${chatHistory}
+      </ChatHistory>
+
+      AI:
+    `,
+  });
   const response = await openai.chat.completions.create({
     model: "gpt-4-0613",
-    temperature: 0.2,
-    presence_penalty: 0.5,
-    frequency_penalty: 0.5,
-    messages: [
-      {
-        role: "system",
-        content: `
-          ${FOLLOWUP_CONTEXT}
-
-          ${FOLLOWUP_EXAMPLES}
-        `,
-      },
-      {
-        role: "user",
-        content: `
-          Summary:
-          ${summary}
-
-          AI:
-        `,
-      },
-    ],
+    temperature: 0.25,
+    messages,
   });
 
   const gptMessage = response.choices[0];
@@ -206,75 +282,76 @@ export async function followup(summary) {
 // ACTION:
 // GET POSSIBLE MATCHES
 //
-export async function match(keywords, summary) {
-  const params = new URLSearchParams(keywords.skills.map((kw) => ["st", kw]));
-  const searchUrl = `https://search.meaningfulgigs.com?${params}`;
-  const matchResponse = await fetch(searchUrl, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.RIVERA_TOKEN}`,
-    },
-  });
-  let matches = await matchResponse.json();
+// export async function match(keywords, summary) {
+//   console.log(keywords);
+//   const params = new URLSearchParams(keywords.skills.map((kw) => ["st", kw]));
+//   const searchUrl = `https://search.meaningfulgigs.com?${params}`;
+//   const matchResponse = await fetch(searchUrl, {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${process.env.RIVERA_TOKEN}`,
+//     },
+//   });
+//   let matches = await matchResponse.json();
 
-  // filter out any candidates that have already been shown
-  matches = matches.filter((m) => !SEEN_CREATIVES.has(m["_id"]));
+//   // filter out any candidates that have already been shown
+//   matches = matches.filter((m) => !SEEN_CREATIVES.has(m["_id"]));
 
-  // reduce to the Top 3
-  matches = matches.slice(0, 3);
-  const topIds = matches.map((c) => c._id);
+//   // reduce to the Top 3
+//   matches = matches.slice(0, 3);
+//   const topIds = matches.map((c) => c._id);
 
-  // add Top 3 results to history of seen candidates
-  topIds.map((id) => SEEN_CREATIVES.add(id));
+//   // add Top 3 results to history of seen candidates
+//   topIds.map((id) => SEEN_CREATIVES.add(id));
 
-  // retrieve profiles for the Top 3 matches
-  const matchProfiles = topIds.map((id) => CREATIVE_DATA[id]);
+//   // retrieve profiles for the Top 3 matches
+//   const matchProfiles = topIds.map((id) => CREATIVE_DATA[id]);
 
-  MESSAGE_HISTORY.push({
-    role: "function",
-    name: "get_matches",
-    content: JSON.stringify(matchProfiles),
-  });
+//   MESSAGE_HISTORY.push({
+//     role: "function",
+//     name: "get_matches",
+//     content: JSON.stringify(matchProfiles),
+//   });
 
-  const responses = await Promise.all(
-    matchProfiles.map((profile) => {
-      return openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0613",
-        temperature: 0.5,
-        messages: [
-          {
-            role: "system",
-            content: EXPLAIN_CONTEXT,
-          },
-          {
-            role: "user",
-            content: `
-                Creative Profile (as JSON):
-                ${JSON.stringify(profile)}
-    
-                Summary:
-                ${summary}
-            `,
-          },
-        ],
-      });
-    })
-  );
+//   const responses = await Promise.all(
+//     matchProfiles.map((profile) => {
+//       return openai.chat.completions.create({
+//         model: "gpt-3.5-turbo-0613",
+//         temperature: 0.5,
+//         messages: [
+//           {
+//             role: "system",
+//             content: EXPLAIN,
+//           },
+//           {
+//             role: "user",
+//             content: `
+//                 Creative Profile (as JSON):
+//                 ${JSON.stringify(profile)}
 
-  const explanations = responses.map(
-    (response) => response.choices[0].message.content
-  );
-  MESSAGE_HISTORY.push({
-    role: "assistant",
-    content: explanations,
-  });
+//                 Summary:
+//                 ${summary}
+//             `,
+//           },
+//         ],
+//       });
+//     })
+//   );
 
-  return {
-    matches,
-    message: explanations,
-  };
-}
+//   const explanations = responses.map(
+//     (response) => response.choices[0].message.content
+//   );
+//   MESSAGE_HISTORY.push({
+//     role: "assistant",
+//     content: explanations,
+//   });
+
+//   return {
+//     matches,
+//     message: explanations,
+//   };
+// }
 
 //
 // ACTION:
@@ -287,7 +364,7 @@ export async function refocus(summary) {
     messages: [
       {
         role: "system",
-        content: REFOCUS_CONTEXT,
+        content: REFOCUS,
       },
       {
         role: "user",

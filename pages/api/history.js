@@ -1,4 +1,4 @@
-import { ORCHESTRATE_CONTEXT, INITIAL_MESSAGE } from "../../constants";
+import { ORCHESTRATE_CONTEXT, INITIAL_MESSAGE } from "../../constants/contexts";
 
 // initialize GPT messages
 export default class MessageHistory {

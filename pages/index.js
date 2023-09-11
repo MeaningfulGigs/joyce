@@ -17,7 +17,7 @@ export default function Home() {
     industries: [],
   });
   const [creatives, setCreatives] = useState(null);
-  const [debug, setDebug] = useState([]);
+  const [actionLog, setActionLog] = useState([]);
   const [summary, setSummary] = useState("");
 
   const [messages, setMessages] = useState([
@@ -62,9 +62,8 @@ export default function Home() {
     setSummary(response.summary);
     setKeywords(response.keywords);
 
-    // log information about GPT results
-    const log = `Action: ${response.action}`;
-    setDebug((prevDebug) => [...prevDebug, log]);
+    // log action taken and explanation
+    setActionLog((prevEntries) => [...prevEntries, response.action]);
 
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -124,11 +123,11 @@ export default function Home() {
       </div>
       <div className={styles.container}>
         <div id="debug" className={styles.debugcontainer}>
-          <div id="summaries" className={styles.debug}>
+          <div className={styles.debug}>
             <div className={styles.debugheader}>
               <h6>SUMMARY</h6>
+              <div id="summary"></div>
             </div>
-            <h5>{summary}</h5>
           </div>
           <div className={styles.debug}>
             <div className={styles.debugheader}>
@@ -140,7 +139,7 @@ export default function Home() {
                 <>
                   <div className={styles.tooltip}>
                     {s.name}
-                    <span class={styles.tooltiptext}>{s.explain}</span>
+                    <span className={styles.tooltiptext}>{s.explain}</span>
                   </div>
                   <br />
                 </>
@@ -152,7 +151,7 @@ export default function Home() {
                 <>
                   <div className={styles.tooltip}>
                     {s.name}
-                    <span class={styles.tooltiptext}>{s.explain}</span>
+                    <span className={styles.tooltiptext}>{s.explain}</span>
                   </div>
                   <br />
                 </>
@@ -164,7 +163,7 @@ export default function Home() {
                 <>
                   <div className={styles.tooltip}>
                     {t.name}
-                    <span class={styles.tooltiptext}>{t.explain}</span>
+                    <span className={styles.tooltiptext}>{t.explain}</span>
                   </div>
                   <br />
                 </>
@@ -175,23 +174,29 @@ export default function Home() {
               {keywords.industries.map((i) => (
                 <div className={styles.tooltip}>
                   {i.name}
-                  <span class={styles.tooltiptext}>{i.explain}</span>
+                  <span className={styles.tooltiptext}>{i.explain}</span>
                 </div>
               ))}
             </div>
           </div>
           <div className={styles.debug}>
             <div className={styles.debugheader}>
-              <h6>ORCHESTRATION LOG</h6>
+              <h6>ACTION LOG</h6>
             </div>
             <div className={styles.debuglogs}>
-              {debug.map((log) => (
-                <h6>{log}</h6>
+              {actionLog.map((log) => (
+                <>
+                  <div className={styles.tooltip}>
+                    {log.name}
+                    <span className={styles.tooltiptext}>{log.explain}</span>
+                  </div>
+                  <br />
+                </>
               ))}
             </div>
           </div>
           <div className={styles.debug}>
-            <div className={styles.debugheader}>
+            <div id="agent_log" className={styles.debugheader}>
               <h6>AGENTS</h6>
             </div>
           </div>
