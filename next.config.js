@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   env: {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    RIVERA_TOKEN: process.env.RIVERA_TOKEN,
+    CHRISTO_TOKEN: process.env.CHRISTO_TOKEN,
   },
 };
 

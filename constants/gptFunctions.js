@@ -1,14 +1,36 @@
-const SEARCH_DESCRIPTION = `
-  This function searches a database and retrieves relevant Creative professionals. 
-  Call this function when you think you have enough keywords to perform a comprehensive search in your Creative Database.
-  To perform a comprehensive search, you need a good mix of specialties, skills, and tools.
-  Industry experience is also helpful but not required.
-`;
-
 export const GPT_FUNCTIONS = [
   {
+    name: "followup",
+    description:
+      "This function asks a follow-up question about the User's design needs.  You must call this function before calling `confirm_search",
+    parameters: {
+      type: "object",
+      properties: {
+        explanation: {
+          type: "string",
+          description: "An explanation of why this function was selected.",
+        },
+      },
+    },
+  },
+  {
+    name: "confirm_search",
+    description:
+      "This function confirms with the User that the collected information is accurate.  It can only be called if the `followup` function has already been called.  You must call this function before calling `search`",
+    parameters: {
+      type: "object",
+      properties: {
+        explanation: {
+          type: "string",
+          description: "An explanation of why this function was selected.",
+        },
+      },
+    },
+  },
+  {
     name: "search",
-    description: SEARCH_DESCRIPTION,
+    description:
+      "This function searches a database and retrieves relevant Creative professionals.  It can only be called if the `confirm_search` function has already been called",
     parameters: {
       type: "object",
       properties: {
@@ -62,20 +84,6 @@ export const GPT_FUNCTIONS = [
         },
       },
       required: ["creativeName"],
-    },
-  },
-  {
-    name: "followup",
-    description:
-      "Asks a follow-up question about the user's design needs, in order to collect all the data required for the `search` function.",
-    parameters: {
-      type: "object",
-      properties: {
-        explanation: {
-          type: "string",
-          description: "An explanation of why this function was selected.",
-        },
-      },
     },
   },
   {

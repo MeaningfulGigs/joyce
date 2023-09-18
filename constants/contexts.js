@@ -9,13 +9,13 @@ export const SUMMARIZE = `
 
 export const PARSE_SPECIALTY = `
   You will be provided with a summary of a conversation between a Hiring Manager and an AI.
-  Read the summary and select the most relevant design specialty from this list:
+  Read the summary and select the most relevant design specialties from this list:
   - UX/UI Product Design
   - Brand & Marketing Design
   - Illustration, Graphic & Visual Storytelling
   - Motion, Video & Animation
 
-  Provide your answer as RFC-8259 compliant JSON in the following format: {"specialties": [{"name": <SPECIALTY_NAME>, "explain": <SELECTION_EXPLANATION>}, ...]}
+  Provide your answer as RFC-8259 compliant JSON in the following format: {"name": <SPECIALTY_NAME>, "explain": <SELECTION_EXPLANATION>}
 `;
 
 export const PARSE_SKILLS = `
@@ -30,7 +30,7 @@ export const PARSE_SKILLS = `
 
 export const PARSE_TOOLS = `
   You will be provided with a Chat History between a Hiring Manager and an AI.
-  You will also be provided with a list of Design Tools.  You will be selecting 0 to 3 tools that are highly-relevant to the Chat History.
+  You will also be provided with a list of Design Tools.  You will be selecting 0 to 3 tools that are explicitly discussed in the Chat History.
   Follow these steps:
 
   Step 1 - Select relevant keywords from the Design Tools list.  They MUST be spelled EXACTLY as in the Design Tools List.
@@ -100,26 +100,21 @@ export const SKILLS_TOOLS_FOLLOWUP = `
 
   Here are some examples of the tone and structure of your answer.
   Example 1:
-  I can already think of a few Creatives who might be a good fit!  Let's get a little more specific: what kind of motion work would they be doing?
+  I can already think of a few Creatives who might be a good fit!  Let's get a little more specific: what kind of motion work would they be doing? Are you looking to bring life to static assets  - like a title sequence movie, or a 2 min explainer video
 
   Example 2:
   OK, I'm getting a better understanding of what you're looking for.  Are there any specific tools your team uses that you'd need the Creative to be skilled in?
 `;
 
-export const INDUSTRIES_FOLLOWUP = `
+export const SEARCH_CONFIRMATION = `
   You will be given a chat history between a Hiring Manager and an AI.
-  You have a high-level understanding of what t0ype of design the Hiring Manager needs done.
+  You have a high-level understanding of what type of design the Hiring Manager needs done.
   You need to get a deeper understanding of what skills and tools the Hiring Manager is specifically looking for.
   First, reassure the Hiring Manager that you understand and can help.
   Then, ask them a question that will get them to respond with some specific design-related Skills and Tools.
   Your tone should be casual but helpful.  Your relationship with the Hiring Manager is friendly, but you want to really understand the user's needs.
 
   Here are some examples of the tone and structure of your answer.
-  Example 1:
-  I can already think of a few Creatives who might be a good fit!  Let's get a little more specific: what kind of motion work would they be doing?
-
-  Example 2:
-  OK, I'm getting a better understanding of what you're looking for.  Are there any specific tools your team uses that you'd need the Creative to be skilled in?
 `;
 
 export const FOLLOWUP_EXAMPLES = `

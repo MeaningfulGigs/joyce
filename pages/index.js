@@ -5,7 +5,7 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
 import { chat } from "../pages/api/chat";
-import { match } from "../pages/api/functions";
+import { match } from "./api/functions/search";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
@@ -57,10 +57,10 @@ export default function Home() {
 
     // send user input to GPT and await response
     setLoading(true);
-    let response = await chat(userInput);
+    let response = await chat(userInput, keywords);
 
-    setSummary(response.summary);
-    setKeywords(response.keywords);
+    // setSummary(response.summary);
+    // setKeywords(response.keywords);
 
     // log action taken and explanation
     setActionLog((prevEntries) => [...prevEntries, response.action]);
@@ -134,7 +134,7 @@ export default function Home() {
               <h6>KEYWORDS</h6>
             </div>
             <h5>Specialties:</h5>
-            <div className={styles.debugSection}>
+            <div id="specialties" className={styles.debugSection}>
               {keywords.specialties.map((s) => (
                 <>
                   <div className={styles.tooltip}>
@@ -146,7 +146,7 @@ export default function Home() {
               ))}
             </div>
             <h5>Skills:</h5>
-            <div className={styles.debugSection}>
+            <div id="skills" className={styles.debugSection}>
               {keywords.skills.map((s) => (
                 <>
                   <div className={styles.tooltip}>
@@ -158,7 +158,7 @@ export default function Home() {
               ))}
             </div>
             <h5>Tools:</h5>
-            <div className={styles.debugSection}>
+            <div id="tools" className={styles.debugSection}>
               {keywords.tools.map((t) => (
                 <>
                   <div className={styles.tooltip}>
@@ -170,7 +170,7 @@ export default function Home() {
               ))}
             </div>
             <h5>Industries:</h5>
-            <div className={styles.debugSection}>
+            <div id="industries" className={styles.debugSection}>
               {keywords.industries.map((i) => (
                 <div className={styles.tooltip}>
                   {i.name}
@@ -183,7 +183,7 @@ export default function Home() {
             <div className={styles.debugheader}>
               <h6>ACTION LOG</h6>
             </div>
-            <div className={styles.debuglogs}>
+            <div id="actions" className={styles.debuglogs}>
               {actionLog.map((log) => (
                 <>
                   <div className={styles.tooltip}>
@@ -196,7 +196,7 @@ export default function Home() {
             </div>
           </div>
           <div className={styles.debug}>
-            <div id="agent_log" className={styles.debugheader}>
+            <div id="agents" className={styles.debugheader}>
               <h6>AGENTS</h6>
             </div>
           </div>

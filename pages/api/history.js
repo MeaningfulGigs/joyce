@@ -21,17 +21,17 @@ export default class MessageHistory {
 
   get chat() {
     const history = this.messages.filter(
-      (message) => message.role !== "system"
+      (message) => message.role === "user" || message.role === "assistant"
     );
 
     return history;
   }
 
-  add(role, content) {
+  add(role, content, functionName) {
     this.messages.push({
       role,
       content,
-      name,
+      name: functionName,
     });
 
     return this.messages;

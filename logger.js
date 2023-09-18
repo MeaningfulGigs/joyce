@@ -1,9 +1,18 @@
-export function log(message) {
-  var logger = document.getElementById("agent_log");
-  logger.innerHTML += `<p>${message}</p>`;
-}
+export function log(id, message) {
+  const logger = document.getElementById(id);
 
-export function logSummary(summary) {
-  var logger = document.getElementById("summary");
-  logger.innerHTML = `<h5>${summary}</h5>`;
+  const keywords = ["specialties", "skills", "tools", "industries"];
+
+  if (id === "summary") {
+    logger.innerHTML = `<h5>${message}</h5>`;
+  } else if (keywords.includes(id)) {
+    message.forEach(
+      (kw) =>
+        (logger.innerHTML += `<div>${kw.name}<span>${kw.explain}</span></div><br />`)
+    );
+  } else if (id === "agents") {
+    logger.innerHTML += `<p>${message}</p>`;
+  } else {
+    return;
+  }
 }
