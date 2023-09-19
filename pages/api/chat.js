@@ -17,7 +17,7 @@ const msgHistory = new MessageHistory();
 
 // PRIMARY FUNCTION: chat
 export async function chat(userInput, currKeywords) {
-  log("agents", "chat: parsing...");
+  log("agents", "chat: crafting response...");
 
   // add user input to message history
   msgHistory.add("user", userInput);
@@ -48,7 +48,6 @@ export async function chat(userInput, currKeywords) {
   }
 
   const [specialties, skills, tools, industries] = newKeywords;
-  log("agents", "chat: complete.");
 
   // call the Orchestrate-Agent
   const keywords = {
@@ -57,17 +56,20 @@ export async function chat(userInput, currKeywords) {
     tools: [...new Set([...tools, ...currKeywords.tools])],
     industries: [...new Set([...industries, ...currKeywords.industries])],
   };
+
   log("specialties", keywords.specialties);
   log("skills", keywords.skills);
   log("tools", keywords.tools);
-  log("industries", keywords.specialties);
+  log("industries", keywords.industries);
 
   let response = await orchestrate(summary, keywords);
+  msgHistory.add("assistant", response.message.content);
 
   // logic branches based on the function
   const fxnName = response.message.function_call.name;
   const { explanation } = JSON.parse(response.message.function_call.arguments);
-  msgHistory.add("assistant", response.message.content);
+  log("actions", { name: fxnName, explain: explanation });
+
   if (fxnName === "refocus") {
     response = await refocus(msgHistory.pretty());
   } else if (fxnName === "search") {

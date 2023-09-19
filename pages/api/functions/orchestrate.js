@@ -16,7 +16,7 @@ You MUST ALWAYS call one of the functions that you have been provided.
 `;
 
 export async function orchestrate(summary, keywords) {
-  log("agents", "orchestrate: begin");
+  log("agents", "orchestrate: selecting action...");
   const { specialties, skills, tools, industries } = pprint(keywords);
   const response = await openai.chat.completions.create({
     model: "gpt-4-0613",
@@ -57,7 +57,7 @@ ${industries ? industries : "No Industries"}
     }
   }
 
-  log("agents", "orchestrate: complete");
+  log("agents", "orchestrate: complete.");
 
   return gptMessage;
 }

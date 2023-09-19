@@ -21,7 +21,6 @@ const EXPLAIN = `
 `;
 
 export async function search(keywords, summary) {
-  console.log(keywords);
   const params = new URLSearchParams(keywords.map((kw) => ["st", kw.name]));
   const searchUrl = `https://api-dev.meaningfulgigs.com/v1/private/search?${params}`;
   const matchResponse = await fetch(searchUrl, {

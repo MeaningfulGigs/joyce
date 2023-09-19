@@ -54,8 +54,7 @@ export default function Home() {
     setLoading(true);
     let response = await chat(userInput, keywords);
 
-    // setSummary(response.summary);
-    // setKeywords(response.keywords);
+    setKeywords(response.keywords);
 
     // log action taken and explanation
     setActionLog((prevEntries) => [...prevEntries, response.action]);
@@ -129,66 +128,19 @@ export default function Home() {
               <h6>KEYWORDS</h6>
             </div>
             <h5>Specialties:</h5>
-            <div id="specialties" className={styles.debugSection}>
-              {keywords.specialties.map((s) => (
-                <>
-                  <div className={styles.tooltip}>
-                    {s.name}
-                    <span className={styles.tooltiptext}>{s.explain}</span>
-                  </div>
-                  <br />
-                </>
-              ))}
-            </div>
+            <div id="specialties" className={styles.debugSection}></div>
             <h5>Skills:</h5>
-            <div id="skills" className={styles.debugSection}>
-              {keywords.skills.map((s) => (
-                <>
-                  <div className={styles.tooltip}>
-                    {s.name}
-                    <span className={styles.tooltiptext}>{s.explain}</span>
-                  </div>
-                  <br />
-                </>
-              ))}
-            </div>
+            <div id="skills" className={styles.debugSection}></div>
             <h5>Tools:</h5>
-            <div id="tools" className={styles.debugSection}>
-              {keywords.tools.map((t) => (
-                <>
-                  <div className={styles.tooltip}>
-                    {t.name}
-                    <span className={styles.tooltiptext}>{t.explain}</span>
-                  </div>
-                  <br />
-                </>
-              ))}
-            </div>
+            <div id="tools" className={styles.debugSection}></div>
             <h5>Industries:</h5>
-            <div id="industries" className={styles.debugSection}>
-              {keywords.industries.map((i) => (
-                <div className={styles.tooltip}>
-                  {i.name}
-                  <span className={styles.tooltiptext}>{i.explain}</span>
-                </div>
-              ))}
-            </div>
+            <div id="industries" className={styles.debugSection}></div>
           </div>
           <div className={styles.debug}>
             <div className={styles.debugheader}>
               <h6>ACTION LOG</h6>
             </div>
-            <div id="actions" className={styles.debuglogs}>
-              {actionLog.map((log) => (
-                <>
-                  <div className={styles.tooltip}>
-                    {log.name}
-                    <span className={styles.tooltiptext}>{log.explain}</span>
-                  </div>
-                  <br />
-                </>
-              ))}
-            </div>
+            <div id="actions" className={styles.debugSection}></div>
           </div>
           <div className={styles.debug}>
             <div id="agents" className={styles.debugheader}>
