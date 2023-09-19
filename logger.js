@@ -6,7 +6,7 @@ export function log(id, message) {
   if (id === "summary") {
     logger.innerHTML = `<h5>${message}</h5>`;
   } else if (keywords.includes(id)) {
-    message.forEach(
+    message.map(
       (kw) =>
         (logger.innerHTML += `<div>${kw.name}<span>${kw.explain}</span></div><br />`)
     );

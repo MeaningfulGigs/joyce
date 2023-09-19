@@ -1,17 +1,19 @@
 import { orchestrate } from "./orchestrate";
-import { followup } from "./followup";
+import { summarize } from "./summarize";
 import { parse } from "./parse";
 import { parseSpecialty } from "./parse";
 import { refocus } from "./refocus";
+import { followup } from "./followup";
+import { confirm } from "./confirm";
 import { search } from "./search";
-import { summarize } from "./summarize";
 
 export {
   orchestrate,
-  followup,
+  summarize,
   parse,
   parseSpecialty,
   refocus,
+  followup,
+  confirm,
   search,
-  summarize,
 };

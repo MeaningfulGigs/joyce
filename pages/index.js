@@ -20,12 +20,7 @@ export default function Home() {
   const [actionLog, setActionLog] = useState([]);
   const [summary, setSummary] = useState("");
 
-  const [messages, setMessages] = useState([
-    {
-      message: "Hi there! Tell me about your design needs.",
-      type: "apiMessage",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const messageListRef = useRef(null);
   const textAreaRef = useRef(null);
@@ -118,7 +113,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.navlogo}>
-          <a onClick={toggleDebug}>Magic Matches v0.9.0</a>
+          <a onClick={toggleDebug}>Magic Matches v1.1.0</a>
         </div>
       </div>
       <div className={styles.container}>
@@ -197,7 +192,7 @@ export default function Home() {
           </div>
           <div className={styles.debug}>
             <div id="agents" className={styles.debugheader}>
-              <h6>AGENTS</h6>
+              <h6>AGENT LOG</h6>
             </div>
           </div>
         </div>

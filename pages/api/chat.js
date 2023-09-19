@@ -3,19 +3,20 @@ import {
   summarize,
   parse,
   parseSpecialty,
-  followup,
   refocus,
+  followup,
+  confirm,
   search,
 } from "./functions";
 
-import { log, logSummary } from "../../logger";
+import { log } from "../../logger";
 
 import MessageHistory from "./history";
 
 const msgHistory = new MessageHistory();
 
 // PRIMARY FUNCTION: chat
-export async function chat(userInput, currentKeywords) {
+export async function chat(userInput, currKeywords) {
   log("agents", "chat: parsing...");
 
   // add user input to message history
@@ -26,34 +27,42 @@ export async function chat(userInput, currentKeywords) {
   log("summary", summary);
 
   // new specialties are added to existing ones, but capped at 2
-  let keywordResponses;
-  if (currentKeywords.specialties.length < 2) {
-    keywordResponses = await Promise.all([
-      parseSpecialty(msgHistory.pretty()),
+  let newKeywords;
+  if (currKeywords.specialties.length < 2) {
+    newKeywords = await Promise.all([
+      parseSpecialty(summary),
       parse(summary, "tools"),
       parse(summary, "industries"),
     ]);
-    const [specialty, ...rest] = keywordResponses;
-    let specialties = [...new Set([specialty, ...currentKeywords.specialties])];
+    const [specialty, ...rest] = newKeywords;
+    let specialties = [...new Set([specialty, ...currKeywords.specialties])];
     const skills = await parse(summary, "skills", specialties);
-    keywordResponses = [specialties, skills, ...rest];
-  } else if (currentKeywords.specialties.length === 2) {
-    keywordResponses = await Promise.all([
-      Promise.resolve(currentKeywords.specialties),
-      parse(summary, "skills", currentKeywords.specialties),
+    newKeywords = [specialties, skills, ...rest];
+  } else if (currKeywords.specialties.length === 2) {
+    newKeywords = await Promise.all([
+      Promise.resolve(currKeywords.specialties),
+      parse(summary, "skills", currKeywords.specialties),
       parse(summary, "tools"),
       parse(summary, "industries"),
     ]);
   }
 
-  const [specialties, skills, tools, industries] = keywordResponses;
+  const [specialties, skills, tools, industries] = newKeywords;
   log("agents", "chat: complete.");
 
   // call the Orchestrate-Agent
-  log("agents", "chat: orchestrating...");
-  const keywords = { specialties, skills, tools, industries };
-  const summaryMessage = summary === "N/A" ? msgHistory.pretty() : summary;
-  let response = await orchestrate(summaryMessage, keywords);
+  const keywords = {
+    specialties: [...new Set([...specialties, ...currKeywords.specialties])],
+    skills: [...new Set([...skills, ...currKeywords.skills])],
+    tools: [...new Set([...tools, ...currKeywords.tools])],
+    industries: [...new Set([...industries, ...currKeywords.industries])],
+  };
+  log("specialties", keywords.specialties);
+  log("skills", keywords.skills);
+  log("tools", keywords.tools);
+  log("industries", keywords.specialties);
+
+  let response = await orchestrate(summary, keywords);
 
   // logic branches based on the function
   const fxnName = response.message.function_call.name;
@@ -63,9 +72,11 @@ export async function chat(userInput, currentKeywords) {
     response = await refocus(msgHistory.pretty());
   } else if (fxnName === "search") {
     let flatKeywords = Object.values(keywords).flat();
-    response = await search(flatKeywords, summaryMessage);
+    response = await search(flatKeywords, summary);
   } else if (fxnName === "followup") {
     response = await followup(msgHistory.pretty(), keywords);
+  } else if (fxnName === "confirm") {
+    response = await confirm(msgHistory.pretty(), keywords);
   }
   msgHistory.add("assistant", response.message.content);
 

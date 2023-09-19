@@ -1,8 +1,8 @@
 export const GPT_FUNCTIONS = [
   {
-    name: "followup",
+    name: "refocus",
     description:
-      "This function asks a follow-up question about the User's design needs.  You must call this function before calling `confirm_search",
+      "Call this function if you have been provided 0 Specialty keywords.",
     parameters: {
       type: "object",
       properties: {
@@ -14,9 +14,23 @@ export const GPT_FUNCTIONS = [
     },
   },
   {
-    name: "confirm_search",
+    name: "followup",
     description:
-      "This function confirms with the User that the collected information is accurate.  It can only be called if the `followup` function has already been called.  You must call this function before calling `search`",
+      "Call this function if you have been provided 1-2 Specialty keywords, but fewer than 3 Skill keywords.",
+    parameters: {
+      type: "object",
+      properties: {
+        explanation: {
+          type: "string",
+          description: "An explanation of why this function was selected.",
+        },
+      },
+    },
+  },
+  {
+    name: "confirm",
+    description:
+      "Call this function if you have been providfed 1-2 Specialty keywords, and 3 or more Skill keywords.",
     parameters: {
       type: "object",
       properties: {
@@ -30,7 +44,7 @@ export const GPT_FUNCTIONS = [
   {
     name: "search",
     description:
-      "This function searches a database and retrieves relevant Creative professionals.  It can only be called if the `confirm_search` function has already been called",
+      "Call this function if the `confirm` function has already been called, and you don't have any further questions.",
     parameters: {
       type: "object",
       properties: {
@@ -84,20 +98,6 @@ export const GPT_FUNCTIONS = [
         },
       },
       required: ["creativeName"],
-    },
-  },
-  {
-    name: "refocus_conversation",
-    description:
-      "Refocuses the conversation back to hiring a Creative professional. This function should be called if the user is talking about things other than hiring Creative professionals.",
-    parameters: {
-      type: "object",
-      properties: {
-        explanation: {
-          type: "string",
-          description: "An explanation of why this function was selected.",
-        },
-      },
     },
   },
 ];

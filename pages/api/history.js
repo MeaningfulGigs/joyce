@@ -3,16 +3,7 @@ import { ORCHESTRATE_CONTEXT, INITIAL_MESSAGE } from "../../constants/contexts";
 // initialize GPT messages
 export default class MessageHistory {
   constructor() {
-    this.messages = [
-      {
-        role: "system",
-        content: ORCHESTRATE_CONTEXT,
-      },
-      {
-        role: "assistant",
-        content: INITIAL_MESSAGE,
-      },
-    ];
+    this.messages = [];
   }
 
   get history() {

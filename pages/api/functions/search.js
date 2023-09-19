@@ -32,7 +32,6 @@ export async function search(keywords, summary) {
     },
   });
   let matches = await matchResponse.json();
-  console.log(matches);
 
   // filter out any candidates that have already been shown
   matches = matches.filter((m) => !SEEN_CREATIVES.has(m["_id"]));

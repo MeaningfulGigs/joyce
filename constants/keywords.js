@@ -179,3 +179,24 @@ export const INDUSTRIES = [
   "Travel and Leisure",
   "Wine, Beer and Spirits",
 ];
+
+export function pprint(keywords) {
+  // convert keyword objects into array of names
+  const specialties = keywords.specialties
+    .map((s) => `<Specialty>${s.name}</Specialty>`)
+    .join("\n");
+  const skills = keywords.skills
+    .map((s) => `<Skill>${s.name}</Skill>`)
+    .join("\n");
+  const tools = keywords.tools.map((t) => `<Tool>${t.name}</Tool>`).join("\n");
+  const industries = keywords.industries
+    .map((i) => `<Industry>${i.name}</Industry>`)
+    .join("\n");
+
+  return {
+    specialties,
+    skills,
+    tools,
+    industries,
+  };
+}
