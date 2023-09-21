@@ -64,9 +64,10 @@ const PARSE_PROMPT = `
 You will be provided with a summary of a Hiring Manager's needs.  Your job is to respond with Keywords from a provided list.
 
 Follow these steps:
-Step 1 - Select Keywords that are highly-relevant to the summary.  YOU ARE LIMITED TO 2 "Skills" KEYWORDS.
-Step 2 - For each Keyword that you select, "explain" why you selected it.
+Step 1 - Select Keywords that are relevant to the summary.  There is no limit, but you should only select keywords that are HIGHLY relevant and significant
+Step 2 - For each Keyword that you select, "explain" why you selected it.  Make sure your keyword selections are ordered from most relevant to least.
 Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"keywords": [{"name": <KEYWORD_SPELLED_IDENTICALLY>, "explain": <SELECTION_EXPLANATION>}, ...]}
+
 Note: Choose ONLY from this Keywords list and spell each Keyword IDENTICALLY in your response:
 <Skills>
 ${Object.values(SKILL_MAP).flat().join("\n")}

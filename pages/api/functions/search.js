@@ -90,13 +90,13 @@ export async function search(keywords, summary) {
     })
   );
 
-  const explanations = responses.map(
-    (response) => response.choices[0].message.content
-  );
+  const explanations = responses
+    .map((response) => response.choices[0].message.content)
+    .join("<br /><br />");
   msgHistory.add("assistant", JSON.stringify(explanations));
 
   return {
     matches,
-    message: explanations,
+    message: { content: JSON.stringify(explanations) },
   };
 }

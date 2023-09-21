@@ -26,9 +26,6 @@ export async function chat(userInput, currKeywords) {
   const summary = await summarize(msgHistory.pretty());
   log("summary", summary);
 
-  // log("agents", "chat: sleeping...");
-  // await new Promise((r) => setTimeout(r, 1000));
-
   // new specialties are added to existing ones, but capped at 2
   const responses = await Promise.all([
     parseSpecialty(summary),
@@ -49,12 +46,14 @@ export async function chat(userInput, currKeywords) {
     currKeywords.specialties.push(newSpecialty);
   }
 
+  let updatedSkills = skills
+    .filter((s) => !existingKeywords.includes(s.name))
+    .slice(0, 2);
+  updatedSkills = [...updatedSkills, ...currKeywords.skills];
+
   const keywords = {
     specialties: currKeywords.specialties,
-    skills: [
-      ...skills.filter((s) => !existingKeywords.includes(s.name)),
-      ...currKeywords.skills,
-    ],
+    skills: updatedSkills,
     tools: [
       ...tools.filter((t) => !existingKeywords.includes(t.name)),
       ...currKeywords.tools,
@@ -77,7 +76,6 @@ export async function chat(userInput, currKeywords) {
   const fxnName = response.message.function_call.name;
   const { explanation } = JSON.parse(response.message.function_call.arguments);
   log("actions", { name: fxnName, explain: explanation });
-  await new Promise((r) => setTimeout(r, 1000));
 
   if (fxnName === "focus") {
     response = await focus(msgHistory.pretty());
@@ -95,8 +93,6 @@ export async function chat(userInput, currKeywords) {
 
   return {
     message: response.message,
-    summary,
     keywords,
-    action: { name: fxnName, explain: explanation },
   };
 }
