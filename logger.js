@@ -10,11 +10,13 @@ export function log(id, message) {
   } else if (id === "actions") {
     logger.innerHTML += `<div>${message.name}<span>${message.explain}</span></div><br />`;
   } else if (keywords.includes(id)) {
-    message.map(
-      (kw) =>
-        (logger.innerHTML = `<div>${kw.name}<span>${kw.explain}</span></div><br />`)
+    const keywords = message.map(
+      (kw) => `<div>${kw.name}<span>${kw.explain}</span></div><br />`
     );
+    logger.innerHTML = keywords.join("");
   } else {
     return;
   }
 }
+
+export function renderResults(profiles) {}

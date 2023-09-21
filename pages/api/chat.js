@@ -26,42 +26,49 @@ export async function chat(userInput, currKeywords) {
   const summary = await summarize(msgHistory.pretty());
   log("summary", summary);
 
+  // log("agents", "chat: sleeping...");
+  // await new Promise((r) => setTimeout(r, 1000));
+
   // new specialties are added to existing ones, but capped at 2
-  let newKeywords;
-  if (currKeywords.specialties.length < 2) {
-    newKeywords = await Promise.all([
-      parseSpecialty(summary),
-      parse(summary, "tools"),
-      parse(summary, "industries"),
-    ]);
-    const [specialty, ...rest] = newKeywords;
-    let specialties = [...new Set([specialty, ...currKeywords.specialties])];
-    const skills = await parse(summary, "skills", specialties);
-    newKeywords = [specialties, skills, ...rest];
-  } else if (currKeywords.specialties.length === 2) {
-    newKeywords = await Promise.all([
-      Promise.resolve(currKeywords.specialties),
-      parse(summary, "skills", currKeywords.specialties),
-      parse(summary, "tools"),
-      parse(summary, "industries"),
-    ]);
+  const responses = await Promise.all([
+    parseSpecialty(summary),
+    parse(summary),
+  ]);
+  const [newSpecialty, newKeywords] = responses;
+  const { skills, tools, industries } = newKeywords;
+  const existingKeywords = Object.values(currKeywords)
+    .flat()
+    .map((kw) => kw.name);
+
+  // add specialty to existing parsed
+  if (
+    currKeywords.specialties.length < 2 &&
+    !existingKeywords.includes(newSpecialty.name)
+  ) {
+    currKeywords.specialties.push(newSpecialty);
   }
 
-  const [specialties, skills, tools, industries] = newKeywords;
-
-  // call the Orchestrate-Agent
   const keywords = {
-    specialties: [...new Set([...specialties, ...currKeywords.specialties])],
-    skills: [...new Set([...skills, ...currKeywords.skills])],
-    tools: [...new Set([...tools, ...currKeywords.tools])],
-    industries: [...new Set([...industries, ...currKeywords.industries])],
+    specialties: currKeywords.specialties,
+    skills: [
+      ...skills.filter((s) => !existingKeywords.includes(s.name)),
+      ...currKeywords.skills,
+    ],
+    tools: [
+      ...tools.filter((t) => !existingKeywords.includes(t.name)),
+      ...currKeywords.tools,
+    ],
+    industries: [
+      ...industries.filter((i) => !existingKeywords.includes(i.name)),
+      ...currKeywords.industries,
+    ],
   };
-
   log("specialties", keywords.specialties);
   log("skills", keywords.skills);
   log("tools", keywords.tools);
   log("industries", keywords.industries);
 
+  // call the Orchestrate-Agent
   let response = await orchestrate(summary, keywords);
   msgHistory.add("assistant", response.message.content);
 
@@ -69,6 +76,7 @@ export async function chat(userInput, currKeywords) {
   const fxnName = response.message.function_call.name;
   const { explanation } = JSON.parse(response.message.function_call.arguments);
   log("actions", { name: fxnName, explain: explanation });
+  await new Promise((r) => setTimeout(r, 1000));
 
   if (fxnName === "refocus") {
     response = await refocus(msgHistory.pretty());

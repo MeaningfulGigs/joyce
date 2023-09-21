@@ -16,7 +16,7 @@ export const GPT_FUNCTIONS = [
   {
     name: "followup",
     description:
-      "Call this function if you have been provided 1-2 Specialty keywords, but fewer than 3 Skill keywords.",
+      "Call this function if you have been provided 1 or 2 Specialty keywords AND fewer than 3 Skill keywords.",
     parameters: {
       type: "object",
       properties: {
@@ -30,7 +30,7 @@ export const GPT_FUNCTIONS = [
   {
     name: "confirm",
     description:
-      "Call this function if you have been providfed 1-2 Specialty keywords, and 3 or more Skill keywords.",
+      "Call this function if you have been provided 1 or 2 Specialty keywords AND 3 or more Skill keywords.",
     parameters: {
       type: "object",
       properties: {

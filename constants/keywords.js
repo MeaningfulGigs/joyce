@@ -75,7 +75,6 @@ export const SKILL_MAP = {
     "Social Media Filters",
     "Motion Design",
     "Immersive Technologies",
-    "",
     "Video Editing",
     "Video Scripts",
     "Videography",
@@ -199,4 +198,27 @@ export function pprint(keywords) {
     tools,
     industries,
   };
+}
+
+export function isKeyword(keywordName) {
+  const allKeywords = [
+    ...Object.values(SKILL_MAP).flat(),
+    ...TOOLS,
+    ...INDUSTRIES,
+  ];
+
+  return !!allKeywords.includes(keywordName);
+}
+
+export function unflatten(keywords) {
+  const unflattened = {
+    skills: keywords.filter((kw) =>
+      Object.values(SKILL_MAP).flat().includes(kw.name)
+    ),
+
+    tools: keywords.filter((kw) => TOOLS.includes(kw.name)),
+    industries: keywords.filter((kw) => INDUSTRIES.includes(kw.name)),
+  };
+
+  return unflattened;
 }

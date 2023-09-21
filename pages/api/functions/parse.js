@@ -1,156 +1,118 @@
-import { SKILL_MAP, TOOLS, INDUSTRIES } from "../../../constants/keywords";
+import {
+  SKILL_MAP,
+  TOOLS,
+  INDUSTRIES,
+  isKeyword,
+  unflatten,
+} from "../../../constants/keywords";
 import { log } from "../../../logger";
 
 import openai from "../openai";
 
-const PARSE_SPECIALTY = `
-  You will be provided with a summary of a conversation between a Hiring Manager and an AI.
-  You will also be provided with a list of Design Specialties.
-  
-  Step 1 - Use the Design Specialties list to select the most relevant specialty to the Hiring Manager's needs, if one exists. If none of the specialties are relevant, respond with "None".
-  Step 2 - Write an explanation for why you selected it (or selected "None").
-  Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"name": <SPECIALTY_NAME>, "explain": <SELECTION_EXPLANATION>}
+//
+//  SPECIALTY PARSER
+//
+
+const PARSE_SPECIALTY_PROMPT = `
+You will be provided with a summary of a Hiring Manager's needs.
+You will also be provided with four design Specialties.
+
+Follow these steps to craft a response:
+Step 1 - From the 4 Specialties, select the one that is most relevant to the Hiring Manager's needs, if one exists. If none of the Specialties are relevant, respond with "None".
+Step 2 - When selecting a Specialty, respond with the "name" spelled IDENTICALLY as it is in the provided list, and "explain" why you selected it.  If you selected "None", explain why you didn't make a selection.
+Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"specialty": {"name": <SPECIALTY_NAME>, "explain": <SELECTION_EXPLANATION>}}
 `;
 
 export async function parseSpecialty(summary) {
-  const specialtyList = Object.keys(SKILL_MAP);
-  const messages = [
-    {
-      role: "system",
-      content: PARSE_SPECIALTY,
-    },
-    {
-      role: "user",
-      content: `
+  const specialties = Object.keys(SKILL_MAP);
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: PARSE_SPECIALTY_PROMPT,
+      },
+      {
+        role: "user",
+        content: `
 <Summary>
 ${summary}
 </Summary>
 
-<DesignSpecialties>
-UX/UI Product Design
-Brand & Marketing Design
-Illustration, Graphic & Visual Storytelling
-Motion, Video & Animation
-</DesignSpecialties>
-
-Answer as RFC-8259 compliant JSON:
+<Specialties>
+${specialties.join("\n")}
+</Specialties>}
 `,
-    },
-  ];
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-0613",
-    temperature: 0,
-    messages,
+      },
+    ],
   });
-
   const gptMessage = response.choices[0];
-  const gptSpecialty = JSON.parse(gptMessage.message.content);
 
-  let topSpecialty;
-  if (gptSpecialty.name == "None") {
-    topSpecialty = gptSpecialty;
-  } else {
-    const match = specialtyList.find((s) => s === gptSpecialty.name);
-    if (match) {
-      topSpecialty = gptSpecialty;
-    } else {
-      topSpecialty = {
-        name: "Bad Parsing",
-        explain: `${gptSpecialty.name} / ${gptSpecialty.explain}`,
-      };
-    }
-  }
+  // filter against the taxonomy keywords to ensure a match
+  const specialtyResponse = JSON.parse(gptMessage.message.content).specialty;
 
-  return topSpecialty;
+  log("agents", "parse specialty: complete");
+
+  return specialties.includes(specialtyResponse.name)
+    ? specialtyResponse
+    : null;
 }
 
 //
 //  GENERAL PURPOSE PARSER
 //
 
-const PARSE_SKILLS = `
-You will be provided with a summary of a Hiring Manager's needs.  The Hiring Manager is seeking a design professional for work they need done.
-You will also be provided with a list of Design Skills.  You will be selecting no more than 2 skills from the list.
-Only select skills that are less specific than the Hiring Manager's needs.  If no skills are relevant, reply with an empty array.
+const PARSE_PROMPT = `
+You will be provided with a summary of a Hiring Manager's needs.  Your job is to respond with Keywords from a provided list.
 
 Follow these steps:
-Step 1 - Use the Design Skills list up to 2 relevant keywords from the Chat History.  They MUST be spelled EXACTLY as in the Design Skills List.
-Step 2 - For each selected keyword, write a one-sentence explanation its relevance and why you selected it.
-Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"keywords": [{"name": <KEYWORD_NAME>, "explain": <SELECTION_EXPLANATION>}, ...]}
+Step 1 - Select Keywords that are highly-relevant to the summary.  You are limited to 2 "Skill" keywords.
+Step 2 - For each Keyword that you select, "explain" why you selected it.
+Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"keywords": [{"name": <KEYWORD_SPELLED_IDENTICALLY>, "explain": <SELECTION_EXPLANATION>}, ...]}
+Note: Choose ONLY from this Keywords list and spell each Keyword IDENTICALLY in your response:
+<Skills> (ONLY SELECT 2!)
+${Object.values(SKILL_MAP).flat().join("\n")}
+</Skills>
+
+<Tools>
+${TOOLS.join("\n")}
+</Tools>
+
+<Industries>
+${INDUSTRIES.join("\n")}
+</Industries>
 `;
 
-const PARSE_TOOLS = `
-You will be provided with a Chat History between a Hiring Manager and an AI.
-You will also be provided with a list of Design Tools.  You will be selecting 0 to 3 tools that are explicitly discussed in the Chat History.
-
-Follow these steps:
-Step 1 - Select relevant keywords from the Design Tools list.  They MUST be spelled EXACTLY as in the Design Tools List.
-Step 2 - For each selected keyword, write a one-sentence explanation its relevance and why you selected it.
-Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"keywords": [{"name": <KEYWORD_NAME>, "explain": <SELECTION_EXPLANATION>}, ...]}
-`;
-
-const PARSE_INDUSTRIES = `
-You will be provided with a Chat History between a Hiring Manager and an AI.  The Hiring Manager is seeking a Creative professional for work they need done.
-You will also be provided with a list of Industries. Use the list to select Industry Experience that the Hiring Manager has explciitly stated they need.
-If the Hiring Manager has not explicitly mentioned needing any specific Industry experience, respond with with "N/A"
-
-Follow these steps:
-Step 1 - Select keywords from the Industries list that the Hiring Manager has explicitly mentioned.  They MUST be spelled EXACTLY as in the Industries List.
-Step 2 - For each selected keyword, write a one-sentence explanation of why you selected it.
-Step 3 - Provide your answer as RFC-8259 compliant JSON in the following format: {"keywords": [{"name": <KEYWORD_NAME>, "explain": <SELECTION_EXPLANATION>}, ...]}
-`;
-
-export async function parse(summary, datatype, specialties) {
-  // use specialties to collect relevant skill keywords
-  const keywordArray =
-    datatype === "industries"
-      ? INDUSTRIES
-      : datatype === "tools"
-      ? TOOLS
-      : specialties.flatMap((specialty) => SKILL_MAP[specialty.name]);
-
-  const messages = [
-    {
-      role: "system",
-      content:
-        datatype === "industries"
-          ? PARSE_INDUSTRIES
-          : datatype === "tools"
-          ? PARSE_TOOLS
-          : PARSE_SKILLS,
-    },
-    {
-      role: "system",
-      content: `
-            <${datatype.toUpperCase()}>
-            ${keywordArray}
-            </${datatype.toUpperCase()}>
-          `,
-    },
-    {
-      role: "user",
-      content: `
+export async function parse(summary) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo-0613",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: PARSE_PROMPT,
+      },
+      {
+        role: "user",
+        content: `
 <Summary>
 ${summary}
 </Summary>
 `,
-    },
-  ];
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-0613",
-    temperature: 0,
-    messages,
+      },
+    ],
   });
 
   const gptMessage = response.choices[0];
 
   // retrieve keywords from GPT response, and filter
   // against the taxonomy keywords to ensure a match
-  let keywords = JSON.parse(gptMessage.message.content).keywords;
-  const cleanKeywords = keywords.filter((kw) => keywordArray.includes(kw.name));
+  const keywordsResponse = JSON.parse(gptMessage.message.content).keywords;
+  const cleanKeywords = keywordsResponse.filter((kw) => isKeyword(kw.name));
+  const keywords = unflatten(cleanKeywords);
 
-  log("agents", `parse: complete (${datatype})`);
+  log("agents", "parse: complete");
 
-  return cleanKeywords;
+  return keywords;
 }

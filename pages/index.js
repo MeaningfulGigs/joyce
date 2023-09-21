@@ -5,7 +5,6 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import CircularProgress from "@mui/material/CircularProgress";
 import { chat } from "../pages/api/chat";
-import { match } from "./api/functions/search";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");

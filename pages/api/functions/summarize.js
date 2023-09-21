@@ -26,7 +26,7 @@ export async function summarize(chatHistory) {
     messages,
   });
 
-  log("summarize: complete");
+  log("agents", "summarize: complete");
 
   const gptMessage = response.choices[0];
   return gptMessage.message.content;

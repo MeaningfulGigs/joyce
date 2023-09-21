@@ -4,7 +4,7 @@ import { log } from "../../../logger";
 
 import openai from "../openai";
 
-const ORCHESTRATE = `
+const ORCHESTRATE_PROMPT = `
 You will be given a Summary of a Hiring Manager's needs in hiring a design professional.
 You will also be given Keywords that summarize the Hiring Manager's needs.
 
@@ -24,7 +24,7 @@ export async function orchestrate(summary, keywords) {
     messages: [
       {
         role: "system",
-        content: ORCHESTRATE,
+        content: ORCHESTRATE_PROMPT,
       },
       {
         role: "user",
