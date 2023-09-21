@@ -4,9 +4,9 @@ import { log } from "../../../logger";
 import openai from "../openai";
 
 export const FOLLOWUP_PROMPT = `
-You will be given a chat history between a Hiring Manager and a helpful assistant.  You are the assistant.
+You will be given a chat history between a Hiring Manager, and an AI that manages a team of designers.
 You will also be given a set of Keywords that represent the Hiring Manager's needs.
-You need to get a deeper understanding of what skills and tools the Hiring Manager is specifically looking for.
+You need to get a deeper understanding of what the Hiring Manager is looking for in a designer.
 
 Follow these steps to craft a followup question:
 Step 1: First, use the provided Keywords to come up with 2 examples of work projects or tasks related to the Keywords.  Do this in your head, not in your response
@@ -38,7 +38,7 @@ ${specialties ? specialties : "No Specialties"}
 ${chatHistory}
 </ChatHistory>
 
-Assistant:
+AI:
 `,
       },
     ],

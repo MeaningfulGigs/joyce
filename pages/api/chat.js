@@ -3,7 +3,7 @@ import {
   summarize,
   parse,
   parseSpecialty,
-  refocus,
+  focus,
   followup,
   confirm,
   search,
@@ -42,6 +42,7 @@ export async function chat(userInput, currKeywords) {
 
   // add specialty to existing parsed
   if (
+    newSpecialty &&
     currKeywords.specialties.length < 2 &&
     !existingKeywords.includes(newSpecialty.name)
   ) {
@@ -78,8 +79,8 @@ export async function chat(userInput, currKeywords) {
   log("actions", { name: fxnName, explain: explanation });
   await new Promise((r) => setTimeout(r, 1000));
 
-  if (fxnName === "refocus") {
-    response = await refocus(msgHistory.pretty());
+  if (fxnName === "focus") {
+    response = await focus(msgHistory.pretty());
   } else if (fxnName === "search") {
     let flatKeywords = Object.values(keywords).flat();
     response = await search(flatKeywords, summary);

@@ -202,6 +202,7 @@ export function pprint(keywords) {
 
 export function isKeyword(keywordName) {
   const allKeywords = [
+    ...Object.keys(SKILL_MAP),
     ...Object.values(SKILL_MAP).flat(),
     ...TOOLS,
     ...INDUSTRIES,

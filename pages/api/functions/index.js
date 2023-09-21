@@ -2,7 +2,7 @@ import { orchestrate } from "./orchestrate";
 import { summarize } from "./summarize";
 import { parse } from "./parse";
 import { parseSpecialty } from "./parse";
-import { refocus } from "./refocus";
+import { focus } from "./focus";
 import { followup } from "./followup";
 import { confirm } from "./confirm";
 import { search } from "./search";
@@ -12,7 +12,7 @@ export {
   summarize,
   parse,
   parseSpecialty,
-  refocus,
+  focus,
   followup,
   confirm,
   search,

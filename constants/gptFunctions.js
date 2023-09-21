@@ -1,6 +1,6 @@
 export const GPT_FUNCTIONS = [
   {
-    name: "refocus",
+    name: "focus",
     description:
       "Call this function if you have been provided 0 Specialty keywords.",
     parameters: {
